@@ -1,0 +1,76 @@
+<div>
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-bold font-display tracking-tight text-white">Tenants</h2>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="openAddDialog()"
+      class="flex items-center gap-2"
+    >
+      <mat-icon>add</mat-icon>
+      Nuevo tenant
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  } @else if (tenants.length === 0) {
+    <div class="glass rounded-3xl p-16 text-center">
+      <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+        <mat-icon class="text-slate-600 text-4xl">business</mat-icon>
+      </div>
+      <p class="text-slate-400 font-medium text-lg mb-2">No hay tenants registrados</p>
+      <p class="text-slate-600 text-sm">Crea el primer tenant para comenzar.</p>
+    </div>
+  } @else {
+    <div class="grid gap-4">
+      @for (tenant of tenants; track tenant.id) {
+        <div class="glass rounded-2xl p-6 hover:border-primary/30 transition-all group">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center border border-white/10">
+                <mat-icon class="text-primary">business</mat-icon>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold text-lg">{{ tenant.name }}</h3>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="text-slate-500 text-sm">{{ tenant.slug }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                    [class]="tenant.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'">
+                    {{ tenant.isActive ? 'Activo' : 'Inactivo' }}
+                  </span>
+                  @if (tenant.plan) {
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+                      {{ tenant.plan.name | uppercase }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                mat-icon-button
+                (click)="openEditDialog(tenant)"
+                matTooltip="Editar"
+              >
+                <mat-icon class="text-slate-400 hover:text-white">edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                (click)="toggleStatus(tenant)"
+                [matTooltip]="tenant.isActive ? 'Desactivar' : 'Activar'"
+              >
+                <mat-icon [class]="tenant.isActive ? 'text-green-400' : 'text-slate-400'">
+                  {{ tenant.isActive ? 'toggle_on' : 'toggle_off' }}
+                </mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

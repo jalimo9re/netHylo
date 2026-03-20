@@ -1,0 +1,69 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Editar' : 'Nuevo' }} tenant</h2>
+
+<mat-dialog-content class="flex flex-col gap-4 py-4">
+  @if (error) {
+    <div class="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+  }
+
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre de la empresa</mat-label>
+    <input matInput [(ngModel)]="companyName" (ngModelChange)="onNameChange()" placeholder="Ej: Mi Empresa SL" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Slug</mat-label>
+    <input matInput [(ngModel)]="companySlug" placeholder="mi-empresa" />
+    <mat-hint>Identificador unico (se genera automaticamente)</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Plan</mat-label>
+    <mat-select [(ngModel)]="planId">
+      @for (plan of plans; track plan.id) {
+        <mat-option [value]="plan.id">
+          {{ plan.name | uppercase }} - {{ plan.maxUsers === -1 ? 'Ilimitado' : plan.maxUsers }} usuarios, {{ plan.maxIntegrations === -1 ? 'Ilimitadas' : plan.maxIntegrations }} integraciones
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (!isEdit) {
+    <div class="border-t pt-4 mt-2">
+      <p class="text-sm font-medium text-gray-700 mb-3">Administrador del tenant</p>
+
+      <div class="flex gap-4">
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>Nombre</mat-label>
+          <input matInput [(ngModel)]="adminFirstName" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>Apellidos</mat-label>
+          <input matInput [(ngModel)]="adminLastName" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Email del administrador</mat-label>
+        <input matInput type="email" [(ngModel)]="adminEmail" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Contraseña</mat-label>
+        <input matInput type="password" [(ngModel)]="adminPassword" />
+        <mat-hint>Minimo 8 caracteres</mat-hint>
+      </mat-form-field>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!isValid() || loading"
+    (click)="save()"
+  >
+    {{ loading ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear tenant') }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  nethylo-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: nethylo-api
+    expose:
+      - '3000'
+    environment:
+      NODE_ENV: production
+      DB_HOST: nethylo-db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-nethylo}
+      REDIS_HOST: nethylo-redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    depends_on:
+      nethylo-db:
+        condition: service_healthy
+      nethylo-redis:
+        condition: service_healthy
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3000/api/plans || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  nethylo-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: nethylo-web
+    expose:
+      - '80'
+    depends_on:
+      nethylo-api:
+        condition: service_healthy
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.port=80
+
+  nethylo-db:
+    image: postgres:16-alpine
+    container_name: nethylo-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-nethylo}
+    volumes:
+      - nethylo-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+
+  nethylo-redis:
+    image: redis:7-alpine
+    container_name: nethylo-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - nethylo-redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+
+volumes:
+  nethylo-pgdata:
+  nethylo-redis-data:
+
+networks:
+  nethylo-network:
+    driver: bridge

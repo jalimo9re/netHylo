@@ -1,0 +1,24 @@
+<div>
+  <h2 class="text-3xl font-bold mb-8 font-display tracking-tight text-white">Configuración</h2>
+
+  <div class="flex flex-col lg:flex-row gap-10">
+    <!-- Sidebar tabs -->
+    <nav class="w-full lg:w-64 flex flex-col gap-2">
+      @for (tab of tabs; track tab.route) {
+        <a
+          [routerLink]="tab.route"
+          routerLinkActive="bg-primary/20 text-white font-bold border-l-4 border-primary"
+          class="flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white transition-all group"
+        >
+          <mat-icon class="text-lg group-hover:scale-110 transition-transform">{{ tab.icon }}</mat-icon>
+          {{ tab.label }}
+        </a>
+      }
+    </nav>
+
+    <!-- Content area -->
+    <div class="flex-1">
+      <router-outlet />
+    </div>
+  </div>
+</div>

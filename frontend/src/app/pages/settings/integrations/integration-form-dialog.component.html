@@ -1,0 +1,80 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Editar' : 'Nueva' }} integración</h2>
+
+<mat-dialog-content class="flex flex-col gap-4 py-4">
+  @if (error) {
+    <div class="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+  }
+
+  <!-- Provider selector (only for new) -->
+  @if (!isEdit) {
+    <mat-form-field appearance="outline">
+      <mat-label>Plataforma</mat-label>
+      <mat-select [(ngModel)]="selectedProvider" (selectionChange)="onProviderChange()">
+        @for (p of providers; track p.key) {
+          <mat-option [value]="p.key">{{ p.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <!-- Name -->
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre de la integración</mat-label>
+    <input matInput [(ngModel)]="name" placeholder="Ej: WhatsApp Ventas" />
+    <mat-hint>Nombre interno para identificar esta conexión</mat-hint>
+  </mat-form-field>
+
+  <!-- Dynamic config fields -->
+  @if (fields.length > 0) {
+    <div class="border-t pt-4 mt-2">
+      <p class="text-sm font-medium text-gray-700 mb-3">
+        Configuración de {{ data.schemas[selectedProvider].label }}
+      </p>
+
+      @for (field of fields; track field.key) {
+        <mat-form-field appearance="outline" class="w-full mb-1">
+          <mat-label>{{ field.label }}</mat-label>
+          <input
+            matInput
+            [type]="field.type"
+            [(ngModel)]="config[field.key]"
+            [required]="field.required"
+          />
+          @if (field.help) {
+            <mat-icon matSuffix [matTooltip]="field.help" class="text-gray-400 cursor-help">help_outline</mat-icon>
+          }
+        </mat-form-field>
+      }
+    </div>
+  }
+
+  <!-- Webhook URL info -->
+  @if (selectedProvider && data.schemas[selectedProvider]) {
+    <div class="bg-blue-50 rounded-lg p-4">
+      <p class="text-xs font-medium text-blue-600 mb-1">URL del Webhook</p>
+      <p class="text-sm text-blue-800 mb-2">
+        Configura esta URL en el panel de desarrolladores de {{ data.schemas[selectedProvider].label }}:
+      </p>
+      <code class="block bg-white rounded px-3 py-2 text-sm text-blue-900 border border-blue-200">
+        {{ data.schemas[selectedProvider].webhookUrl }}
+      </code>
+      @if (data.schemas[selectedProvider]['setupNote']) {
+        <p class="text-xs text-blue-600 mt-2">
+          {{ data.schemas[selectedProvider]['setupNote'] }}
+        </p>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!isValid() || loading"
+    (click)="save()"
+  >
+    {{ loading ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear integración') }}
+  </button>
+</mat-dialog-actions>

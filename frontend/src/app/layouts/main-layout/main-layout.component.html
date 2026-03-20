@@ -1,0 +1,9 @@
+<div class="flex min-h-screen bg-background text-foreground selection:bg-primary/30">
+  <app-sidebar />
+  <div class="flex-1 ml-64 flex flex-col">
+    <app-topbar />
+    <main class="mt-16 p-8 flex-1 overflow-hidden">
+      <router-outlet />
+    </main>
+  </div>
+</div>

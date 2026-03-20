@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  nethylo-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nethylo-api
+    ports:
+      - '3100:3000'
+    environment:
+      NODE_ENV: development
+      DB_HOST: nethylo-db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-nethylo}
+      DB_PASSWORD: ${DB_PASSWORD:-nethylo_secret}
+      DB_NAME: ${DB_NAME:-nethylo}
+      REDIS_HOST: nethylo-redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
+    depends_on:
+      nethylo-db:
+        condition: service_healthy
+      nethylo-redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+
+  nethylo-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nethylo-web
+    ports:
+      - '4500:4200'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - nethylo-api
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+
+  nethylo-db:
+    image: postgres:16-alpine
+    container_name: nethylo-db
+    ports:
+      - '5450:5432'
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-nethylo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nethylo_secret}
+      POSTGRES_DB: ${DB_NAME:-nethylo}
+    volumes:
+      - nethylo-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-nethylo}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+
+  nethylo-redis:
+    image: redis:7-alpine
+    container_name: nethylo-redis
+    ports:
+      - '6390:6379'
+    volumes:
+      - nethylo-redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nethylo-network
+    restart: unless-stopped
+
+volumes:
+  nethylo-pgdata:
+  nethylo-redis-data:
+
+networks:
+  nethylo-network:
+    driver: bridge

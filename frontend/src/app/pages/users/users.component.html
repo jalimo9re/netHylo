@@ -1,0 +1,78 @@
+<div>
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-bold font-display tracking-tight text-white">Usuarios</h2>
+    @if (canManage) {
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="openAddDialog()"
+        class="flex items-center gap-2"
+      >
+        <mat-icon>person_add</mat-icon>
+        Nuevo usuario
+      </button>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  } @else if (users.length === 0) {
+    <div class="glass rounded-3xl p-16 text-center">
+      <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+        <mat-icon class="text-slate-600 text-4xl">group</mat-icon>
+      </div>
+      <p class="text-slate-400 font-medium text-lg mb-2">No hay usuarios</p>
+      <p class="text-slate-600 text-sm">Anade usuarios para que puedan gestionar conversaciones.</p>
+    </div>
+  } @else {
+    <div class="grid gap-4">
+      @for (user of users; track user.id) {
+        <div class="glass rounded-2xl p-6 hover:border-primary/30 transition-all group">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center border border-white/10">
+                <span class="text-primary font-bold text-lg">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</span>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold">{{ user.firstName }} {{ user.lastName }}</h3>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="text-slate-500 text-sm">{{ user.email }}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium" [class]="getRoleColor(user.role)">
+                    {{ getRoleLabel(user.role) }}
+                  </span>
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                    [class]="user.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'">
+                    {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            @if (canManage) {
+              <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  mat-icon-button
+                  (click)="openEditDialog(user)"
+                  matTooltip="Editar"
+                >
+                  <mat-icon class="text-slate-400 hover:text-white">edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  (click)="toggleActive(user)"
+                  [matTooltip]="user.isActive ? 'Desactivar' : 'Activar'"
+                >
+                  <mat-icon [class]="user.isActive ? 'text-green-400' : 'text-slate-400'">
+                    {{ user.isActive ? 'toggle_on' : 'toggle_off' }}
+                  </mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
