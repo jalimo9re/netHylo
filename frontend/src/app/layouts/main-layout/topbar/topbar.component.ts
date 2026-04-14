@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -9,6 +9,8 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './topbar.component.html',
 })
 export class TopbarComponent {
+  menuToggle = output<void>();
+
   constructor(private authService: AuthService) {}
 
   get userEmail(): string {

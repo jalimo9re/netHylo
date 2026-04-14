@@ -1,12 +1,23 @@
 <div>
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
-    <div>
-      <h3 class="text-2xl font-bold text-white font-display tracking-tight mb-2">Canales Conectados</h3>
-      <p class="text-sm text-slate-400 font-medium">Gestiona tus integraciones para empezar a recibir mensajes.</p>
+    <div class="flex flex-col gap-1">
+      <h3 class="text-2xl font-bold text-white font-display tracking-tight">Canales Conectados</h3>
+      @if (currentTenant && currentTenant.plan) {
+        <div class="flex items-center gap-2">
+          <div class="px-3 py-1 bg-white/5 rounded-full border border-white/10 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full" [class]="integrations.length >= currentTenant.plan.maxIntegrations && currentTenant.plan.maxIntegrations !== -1 ? 'bg-orange-500' : 'bg-primary'"></div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {{ integrations.length }} de {{ currentTenant.plan.maxIntegrations === -1 ? '∞' : currentTenant.plan.maxIntegrations }} canales
+            </span>
+          </div>
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Plan {{ currentTenant.plan.name }}</span>
+        </div>
+      }
     </div>
     <button
       (click)="openAddDialog()"
-      class="flex items-center justify-center gap-2 bg-primary hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95"
+      [disabled]="currentTenant && currentTenant.plan && currentTenant.plan.maxIntegrations !== -1 && integrations.length >= currentTenant.plan.maxIntegrations"
+      class="flex items-center justify-center gap-2 bg-primary hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <mat-icon class="text-lg">add</mat-icon>
       Nuevo Canal

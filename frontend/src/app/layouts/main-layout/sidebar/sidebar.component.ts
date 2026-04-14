@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
@@ -17,14 +17,15 @@ interface NavItem {
   templateUrl: './sidebar.component.html',
 })
 export class SidebarComponent {
+  navClicked = output<void>();
+
   private allNavItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['superadmin', 'admin', 'agent'] },
     { label: 'Tenants', icon: 'business', route: '/tenants', roles: ['superadmin'] },
     { label: 'Inbox', icon: 'inbox', route: '/inbox', roles: ['admin', 'agent'] },
     { label: 'Contactos', icon: 'contacts', route: '/contacts', roles: ['admin', 'agent'] },
-    { label: 'Usuarios', icon: 'group', route: '/users', roles: ['admin'] },
-    { label: 'Integraciones', icon: 'extension', route: '/settings/integrations', roles: ['admin'] },
-    { label: 'Configuración', icon: 'settings', route: '/settings', roles: ['admin'] },
+    { label: 'Usuarios', icon: 'group', route: '/users', roles: ['superadmin', 'admin'] },
+    { label: 'Configuración', icon: 'settings', route: '/settings', roles: ['superadmin', 'admin'] },
   ];
 
   navItems = computed(() => {
@@ -33,4 +34,8 @@ export class SidebarComponent {
   });
 
   constructor(private authService: AuthService) {}
+
+  onNavClick() {
+    this.navClicked.emit();
+  }
 }

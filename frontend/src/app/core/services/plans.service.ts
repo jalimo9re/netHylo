@@ -19,4 +19,8 @@ export class PlansService {
   findAll() {
     return this.http.get<Plan[]>(this.url);
   }
+
+  update(id: string, data: Partial<Plan>) {
+    return this.http.patch<Plan>(`${this.url}/${id}`, data);
+  }
 }

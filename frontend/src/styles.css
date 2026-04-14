@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import '@angular/cdk/overlay-prebuilt.css';
 
 @tailwind base;
 @tailwind components;
@@ -17,6 +18,11 @@
   
   --font-main: 'Inter', sans-serif;
   --font-display: 'Outfit', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -43,4 +49,188 @@ h1, h2, h3, h4 {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Base style for native controls used across layout pages */
+input,
+select,
+textarea,
+button {
+  font-family: var(--font-main);
+}
+
+/* Keep focus treatment consistent with the primary brand color */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.45);
+  outline-offset: 2px;
+}
+
+/* Angular Material dialogs and form fields in dark/glass style */
+.cdk-overlay-container .mat-mdc-dialog-container .mdc-dialog__surface {
+  background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.96) 0%,
+      rgba(15, 23, 42, 0.93) 100%
+    ),
+    rgba(15, 23, 42, 0.96);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: 0 28px 64px rgba(2, 6, 23, 0.6);
+}
+
+.mat-mdc-dialog-title {
+  color: #f8fafc !important;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.mat-mdc-dialog-content {
+  color: #cbd5e1;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-form-field .mdc-text-field--outlined {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0.95rem;
+}
+
+.mat-mdc-form-field .mdc-floating-label,
+.mat-mdc-form-field .mat-mdc-form-field-hint,
+.mat-mdc-form-field .mat-mdc-select-arrow,
+.mat-mdc-form-field .mat-mdc-form-field-icon-suffix {
+  color: #94a3b8 !important;
+}
+
+.mat-mdc-form-field .mdc-text-field__input,
+.mat-mdc-select-value-text {
+  color: #e2e8f0 !important;
+}
+
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+}
+
+.mat-mdc-form-field:hover .mdc-notched-outline__leading,
+.mat-mdc-form-field:hover .mdc-notched-outline__notch,
+.mat-mdc-form-field:hover .mdc-notched-outline__trailing {
+  border-color: rgba(148, 163, 184, 0.52) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: rgba(99, 102, 241, 0.85) !important;
+}
+
+.mat-mdc-dialog-actions {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.mat-mdc-dialog-actions .mat-mdc-button,
+.mat-mdc-dialog-actions .mat-mdc-raised-button {
+  border-radius: 0.85rem;
+}
+
+.mat-mdc-select-panel {
+  background: #0f172a !important;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 0.9rem !important;
+}
+
+.mat-mdc-option .mdc-list-item__primary-text {
+  color: #cbd5e1;
+}
+
+.mat-mdc-select-value,
+.mat-mdc-select-placeholder {
+  color: #e2e8f0 !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected {
+  background: rgba(99, 102, 241, 0.18) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text {
+  color: #eef2ff;
+  font-weight: 600;
+}
+
+.mat-mdc-option.mat-mdc-option-active {
+  background: rgba(148, 163, 184, 0.16) !important;
+}
+
+/* Tooltip style aligned with webhook info card */
+.mat-mdc-tooltip .mdc-tooltip__surface {
+  background: rgba(99, 102, 241, 0.14) !important;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: #e2e8f0 !important;
+  border-radius: 0.7rem !important;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.4);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  padding: 0.45rem 0.6rem;
+}
+
+/* Unified scrollbar style for chat/list panels */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) rgba(255, 255, 255, 0.02);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(99, 102, 241, 0.5),
+    rgba(148, 163, 184, 0.38)
+  );
+  border: 2px solid rgba(15, 23, 42, 0.88);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(99, 102, 241, 0.75),
+    rgba(148, 163, 184, 0.55)
+  );
+}
+
+/* Prevent browser autofill white background in dark forms */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #e2e8f0 !important;
+  caret-color: #e2e8f0;
+  border-radius: 0.7rem;
+  box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.92) inset !important;
+  transition: background-color 9999s ease-out 0s;
 }

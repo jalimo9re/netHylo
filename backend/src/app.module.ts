@@ -13,6 +13,9 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SystemConfigModule } from './modules/system-config/system-config.module';
+import { ActionsModule } from './modules/actions/actions.module';
 
 @Module({
   imports: [
@@ -49,6 +52,9 @@ import { ContactsModule } from './modules/contacts/contacts.module';
     ConversationsModule,
     MessagesModule,
     ContactsModule,
+    DashboardModule,
+    SystemConfigModule,
+    ActionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

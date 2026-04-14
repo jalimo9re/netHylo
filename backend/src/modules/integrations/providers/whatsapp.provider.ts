@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import {
@@ -18,6 +18,7 @@ const WHATSAPP_API_URL = 'https://graph.facebook.com/v21.0';
 @Injectable()
 export class WhatsAppProvider extends MessagingProviderBase {
   readonly provider = IntegrationProvider.WHATSAPP;
+  private readonly logger = new Logger(WhatsAppProvider.name);
 
   constructor(private configService: ConfigService) {
     super();
@@ -31,7 +32,12 @@ export class WhatsAppProvider extends MessagingProviderBase {
     const accessToken = config.accessToken;
     const url = `${WHATSAPP_API_URL}/${phoneNumberId}/messages`;
 
-    const body = this.buildMessagePayload(options);
+    const body = await this.buildMessagePayload(config, options);
+    if (options.type === MessageType.IMAGE) {
+      this.logger.log(
+        `Sending IMAGE to ${options.to} (hasMediaId=${!!body?.image?.id}, hasLink=${!!body?.image?.link})`,
+      );
+    }
 
     const response = await fetch(url, {
       method: 'POST',
@@ -45,12 +51,24 @@ export class WhatsAppProvider extends MessagingProviderBase {
     const data = await response.json();
 
     if (!response.ok) {
+      this.logger.error(
+        `WhatsApp sendMessage failed (${options.type}) - ${JSON.stringify(data)}`,
+      );
       throw new Error(`WhatsApp API error: ${JSON.stringify(data)}`);
+    }
+
+    if (options.type === MessageType.IMAGE) {
+      this.logger.log(
+        `IMAGE sent successfully. externalId=${data.messages?.[0]?.id || 'n/a'} mediaId=${body?.image?.id || 'n/a'}`,
+      );
     }
 
     return {
       externalId: data.messages?.[0]?.id || '',
       timestamp: new Date(),
+      metadata: {
+        mediaId: body?.image?.id || body?.video?.id || body?.audio?.id || body?.document?.id,
+      },
     };
   }
 
@@ -85,8 +103,14 @@ export class WhatsAppProvider extends MessagingProviderBase {
               content: this.extractContent(msg),
               type: this.mapMessageType(msg.type),
               timestamp: new Date(parseInt(msg.timestamp) * 1000),
+              metadata: this.extractMetadata(msg),
               rawPayload: msg,
             });
+            if (msg.type === 'image') {
+              this.logger.log(
+                `Inbound IMAGE webhook parsed. waMessageId=${msg.id} mediaId=${msg.image?.id || 'n/a'} from=${msg.from}`,
+              );
+            }
           }
         }
 
@@ -143,7 +167,10 @@ export class WhatsAppProvider extends MessagingProviderBase {
     return config.phoneNumberId || '';
   }
 
-  private buildMessagePayload(options: SendMessageOptions): any {
+  private async buildMessagePayload(
+    config: Record<string, any>,
+    options: SendMessageOptions,
+  ): Promise<any> {
     const base = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
@@ -151,8 +178,38 @@ export class WhatsAppProvider extends MessagingProviderBase {
     };
 
     switch (options.type) {
-      case MessageType.IMAGE:
-        return { ...base, type: 'image', image: { link: options.content } };
+      case MessageType.IMAGE: {
+        const caption = options.metadata?.caption;
+        if (options.metadata?.mediaId) {
+          return {
+            ...base,
+            type: 'image',
+            image: {
+              id: options.metadata.mediaId,
+              ...(caption ? { caption } : {}),
+            },
+          };
+        }
+        if (options.metadata?.dataUrl) {
+          const mediaId = await this.uploadMedia(config, options.metadata);
+          return {
+            ...base,
+            type: 'image',
+            image: {
+              id: mediaId,
+              ...(caption ? { caption } : {}),
+            },
+          };
+        }
+        return {
+          ...base,
+          type: 'image',
+          image: {
+            link: options.content,
+            ...(caption ? { caption } : {}),
+          },
+        };
+      }
       case MessageType.VIDEO:
         return { ...base, type: 'video', video: { link: options.content } };
       case MessageType.AUDIO:
@@ -162,6 +219,84 @@ export class WhatsAppProvider extends MessagingProviderBase {
       default:
         return { ...base, type: 'text', text: { preview_url: false, body: options.content } };
     }
+  }
+
+  private extractMetadata(msg: any): Record<string, any> {
+    switch (msg.type) {
+      case 'image':
+        return {
+          mediaId: msg.image?.id,
+          mimeType: msg.image?.mime_type,
+          sha256: msg.image?.sha256,
+          caption: msg.image?.caption,
+        };
+      case 'video':
+        return {
+          mediaId: msg.video?.id,
+          mimeType: msg.video?.mime_type,
+          sha256: msg.video?.sha256,
+          caption: msg.video?.caption,
+        };
+      case 'audio':
+        return {
+          mediaId: msg.audio?.id,
+          mimeType: msg.audio?.mime_type,
+          sha256: msg.audio?.sha256,
+        };
+      case 'document':
+        return {
+          mediaId: msg.document?.id,
+          mimeType: msg.document?.mime_type,
+          sha256: msg.document?.sha256,
+          fileName: msg.document?.filename,
+          caption: msg.document?.caption,
+        };
+      default:
+        return {};
+    }
+  }
+
+  private async uploadMedia(
+    config: Record<string, any>,
+    metadata: Record<string, any>,
+  ): Promise<string> {
+    const phoneNumberId = config.phoneNumberId;
+    const accessToken = config.accessToken;
+    const fileName = metadata.fileName || 'image.jpg';
+    const mimeType = metadata.mimeType || 'image/jpeg';
+    const dataUrl = metadata.dataUrl as string;
+
+    const match = /^data:.*;base64,(.*)$/.exec(dataUrl || '');
+    if (!match?.[1]) {
+      throw new Error('Invalid image payload');
+    }
+
+    const binary = Buffer.from(match[1], 'base64');
+    this.logger.log(
+      `Uploading IMAGE media to WhatsApp. bytes=${binary.length} mimeType=${mimeType} fileName=${fileName}`,
+    );
+    const formData = new FormData();
+    formData.append('messaging_product', 'whatsapp');
+    formData.append('type', mimeType);
+    formData.append('file', new Blob([binary], { type: mimeType }), fileName);
+
+    const response = await fetch(`${WHATSAPP_API_URL}/${phoneNumberId}/media`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data?.id) {
+      this.logger.error(`WhatsApp media upload failed: ${JSON.stringify(data)}`);
+      throw new Error(`WhatsApp media upload error: ${JSON.stringify(data)}`);
+    }
+
+    this.logger.log(`WhatsApp media uploaded successfully. mediaId=${data.id}`);
+
+    return data.id;
   }
 
   private extractContent(msg: any): string {

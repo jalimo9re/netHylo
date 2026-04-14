@@ -23,8 +23,8 @@ async function seed() {
 
   // Seed Plans
   const plans = [
-    { name: PlanName.BASIC, maxUsers: 1, maxIntegrations: 2, price: 0 },
-    { name: PlanName.MEDIUM, maxUsers: 5, maxIntegrations: 10, price: 49.99 },
+    { name: PlanName.BASIC, maxUsers: 3, maxIntegrations: 2, price: 0 },
+    { name: PlanName.MEDIUM, maxUsers: 5, maxIntegrations: 5, price: 49.99 },
     { name: PlanName.FULL, maxUsers: -1, maxIntegrations: -1, price: 149.99 },
   ];
 

@@ -16,4 +16,9 @@ export class PlansService {
   async findOne(id: string) {
     return this.planRepo.findOneOrFail({ where: { id } });
   }
+
+  async update(id: string, data: Partial<Plan>) {
+    await this.planRepo.update(id, data);
+    return this.findOne(id);
+  }
 }

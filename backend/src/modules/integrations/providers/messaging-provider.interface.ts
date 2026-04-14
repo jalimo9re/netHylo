@@ -11,6 +11,7 @@ export interface SendMessageOptions {
 export interface SendMessageResult {
   externalId: string;
   timestamp: Date;
+  metadata?: Record<string, any>;
 }
 
 export interface IncomingMessage {
@@ -21,6 +22,7 @@ export interface IncomingMessage {
   content: string;
   type: MessageType;
   timestamp: Date;
+  metadata?: Record<string, any>;
   rawPayload: Record<string, any>;
 }
 

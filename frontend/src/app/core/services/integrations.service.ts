@@ -10,11 +10,17 @@ export interface ProviderField {
   help: string;
 }
 
+export interface SetupStep {
+  title: string;
+  description: string;
+}
+
 export interface ProviderSchema {
   label: string;
   fields: ProviderField[];
   webhookUrl: string;
   setupNote?: string;
+  setupGuide?: SetupStep[];
 }
 
 export interface Integration {
@@ -57,5 +63,25 @@ export class IntegrationsService {
 
   remove(id: string) {
     return this.http.delete(`${this.url}/${id}`);
+  }
+
+  getOAuthUrl(type: 'messenger' | 'instagram') {
+    return this.http.get<{ url: string }>(
+      `${this.url}/oauth/meta/url?type=${type}`,
+    );
+  }
+
+  createFromOAuth(data: {
+    type: 'messenger' | 'instagram';
+    pageId: string;
+    pageName: string;
+    pageAccessToken: string;
+    igAccountId?: string;
+    igUsername?: string;
+  }) {
+    return this.http.post<Integration>(
+      `${this.url}/oauth/meta/create`,
+      data,
+    );
   }
 }

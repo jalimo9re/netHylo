@@ -32,6 +32,10 @@ export class TenantsService {
     return this.http.get<Tenant[]>(this.url);
   }
 
+  findMe() {
+    return this.http.get<Tenant>(`${this.url}/me`);
+  }
+
   findOne(id: string) {
     return this.http.get<Tenant>(`${this.url}/${id}`);
   }

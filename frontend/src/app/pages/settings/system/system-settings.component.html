@@ -1,0 +1,166 @@
+<div class="space-y-10 pb-10">
+  <!-- Planes y Precios -->
+  <div>
+    <div class="mb-6">
+      <h3 class="text-xl font-bold text-white font-display tracking-tight mb-1">Planes y Precios</h3>
+      <p class="text-xs text-slate-500 font-medium uppercase tracking-widest">Configura los paquetes de suscripción del sistema</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative min-h-[200px]">
+      @if (loadingPlans) {
+        <div class="absolute inset-0 flex items-center justify-center z-20">
+          <div class="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        </div>
+      }
+
+      @for (plan of plans; track plan.id) {
+        <div class="glass p-6 rounded-3xl border-white/5 relative group hover:border-primary/30 transition-all" [class.opacity-50]="loadingPlans">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-111 transition-transform">
+              <mat-icon>{{ plan.icon }}</mat-icon>
+            </div>
+            <div>
+              <h4 class="font-bold text-white uppercase tracking-wide">{{ plan.name }}</h4>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Precio Mensual (€)</label>
+              <input
+                type="number"
+                [(ngModel)]="plan.price"
+                class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Usuarios</label>
+                <input
+                  type="number"
+                  [(ngModel)]="plan.maxUsers"
+                  class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all"
+                  placeholder="Max"
+                />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Integ.</label>
+                <input
+                  type="number"
+                  [(ngModel)]="plan.maxIntegrations"
+                  class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all"
+                  placeholder="Max"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="h-px bg-white/5"></div>
+
+  <!-- Email Configuration -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+    <div>
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-white font-display tracking-tight mb-1">Configuración de Email</h3>
+        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Servicio de notificaciones del sistema</p>
+      </div>
+
+      <div class="glass p-6 rounded-3xl border-white/5 space-y-6">
+        <div class="flex gap-2 p-1 bg-white/5 rounded-2xl">
+          <button
+            (click)="emailProvider.set('smtp')"
+            class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+            [class]="emailProvider() === 'smtp' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-300'"
+          >
+            SMTP
+          </button>
+          <button
+            (click)="emailProvider.set('resend')"
+            class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+            [class]="emailProvider() === 'resend' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-300'"
+          >
+            Resend
+          </button>
+        </div>
+
+        @if (emailProvider() === 'smtp') {
+          <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Host</label>
+                <input type="text" [(ngModel)]="smtpConfig.host" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Puerto</label>
+                <input type="number" [(ngModel)]="smtpConfig.port" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Usuario</label>
+              <input type="text" [(ngModel)]="smtpConfig.user" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Contraseña</label>
+              <input type="password" [(ngModel)]="smtpConfig.pass" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+            </div>
+          </div>
+        } @else {
+          <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Resend API Key</label>
+              <div class="relative group">
+                <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg">vpn_key</mat-icon>
+                <input type="password" [(ngModel)]="resendKey" placeholder="re_..." class="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div>
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-white font-display tracking-tight mb-1">Pasarela de Pagos</h3>
+        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Configuración de Redsys</p>
+      </div>
+
+      <div class="glass p-6 rounded-3xl border-white/5 space-y-4">
+        <div class="flex items-center gap-4 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <p class="text-xs font-medium text-slate-400">Configura las credenciales de Redsys para procesar cobros automáticos.</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">FUC (Comercio)</label>
+          <input type="text" [(ngModel)]="redsysConfig.fuc" placeholder="000000000" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Terminal</label>
+          <input type="text" [(ngModel)]="redsysConfig.terminal" placeholder="1" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Clave Secreta</label>
+          <input type="password" [(ngModel)]="redsysConfig.key" placeholder="••••••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white outline-none focus:border-primary/50 transition-all" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end pt-6">
+    <button
+      class="bg-primary hover:bg-primary-600 text-white font-bold py-3.5 px-10 rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center gap-3"
+      (click)="saveSettings()"
+    >
+      <mat-icon>save</mat-icon>
+      Guardar todas las configuraciones
+    </button>
+  </div>
+</div>

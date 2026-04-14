@@ -51,13 +51,26 @@ export const routes: Routes = [
             (m) => m.SettingsComponent,
           ),
         children: [
-          { path: '', redirectTo: 'integrations', pathMatch: 'full' },
           {
             path: 'integrations',
             loadComponent: () =>
               import(
                 './pages/settings/integrations/integrations-settings.component'
               ).then((m) => m.IntegrationsSettingsComponent),
+          },
+          {
+            path: 'actions',
+            loadComponent: () =>
+              import(
+                './pages/settings/actions/actions-settings.component'
+              ).then((m) => m.ActionsSettingsComponent),
+          },
+          {
+            path: 'system',
+            loadComponent: () =>
+              import('./pages/settings/system/system-settings.component').then(
+                (m) => m.SystemSettingsComponent,
+              ),
           },
         ],
       },

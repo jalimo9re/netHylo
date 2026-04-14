@@ -28,6 +28,16 @@ export class LoginComponent {
   password = '';
   error = '';
   loading = false;
+  
+  // MFA States
+  mfaRequired = false;
+  mfaEnabled = false;
+  mfaMethod: 'authenticator' | 'email' | null = null;
+  tempToken = '';
+  mfaCode = '';
+  qrCodeUrl = '';
+  setupMethod: 'authenticator' | 'email' | null = null;
+  step: 'LOGIN' | 'MFA_VERIFY' | 'MFA_SETUP' | 'MFA_CHOOSE' = 'LOGIN';
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -35,13 +45,76 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
     this.authService.login(this.email, this.password).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
+      next: (res) => {
+        if (res.mfaRequired) {
+          this.tempToken = res.tempToken || '';
+          this.mfaEnabled = res.mfaEnabled || false;
+          this.mfaMethod = res.mfaMethod || null;
+          
+          if (this.mfaEnabled) {
+            this.step = 'MFA_VERIFY';
+          } else {
+            this.step = 'MFA_CHOOSE';
+          }
+          this.loading = false;
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (err) => {
         this.error = err.error?.message || 'Credenciales inválidas';
         this.loading = false;
       },
     });
+  }
+
+  onVerifyMfa() {
+    this.loading = true;
+    this.error = '';
+    this.authService.verifyMfa(this.tempToken, this.mfaCode).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Código inválido';
+        this.loading = false;
+      }
+    });
+  }
+
+  onChooseSetup(method: 'authenticator' | 'email') {
+    this.loading = true;
+    this.setupMethod = method;
+    this.authService.setupMfaInit(this.tempToken, method).subscribe({
+      next: (res) => {
+        if (method === 'authenticator') {
+          this.qrCodeUrl = res.qrCode;
+        }
+        this.step = 'MFA_SETUP';
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error al iniciar configuración';
+        this.loading = false;
+      }
+    });
+  }
+
+  onConfirmSetup() {
+    this.loading = true;
+    this.error = '';
+    this.authService.setupMfaConfirm(this.tempToken, this.mfaCode).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Código inválido';
+        this.loading = false;
+      }
+    });
+  }
+
+  resendCode() {
+    this.authService.resendMfaCode(this.tempToken).subscribe();
   }
 }

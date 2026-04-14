@@ -3,5 +3,11 @@
     "target": "http://nethylo-api:3000",
     "secure": false,
     "changeOrigin": true
+  },
+  "/socket.io": {
+    "target": "http://nethylo-api:3000",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true
   }
 }

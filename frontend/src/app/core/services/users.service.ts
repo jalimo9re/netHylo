@@ -10,6 +10,7 @@ export interface User {
   role: string;
   isActive: boolean;
   tenantId: string;
+  tenant?: { id: string; name: string };
   createdAt: string;
   updatedAt: string;
 }
@@ -42,5 +43,9 @@ export class UsersService {
 
   update(id: string, data: Partial<User>) {
     return this.http.patch<User>(`${this.url}/${id}`, data);
+  }
+
+  resetPassword(id: string, password: string) {
+    return this.http.patch<{ message: string }>(`${this.url}/${id}/reset-password`, { password });
   }
 }

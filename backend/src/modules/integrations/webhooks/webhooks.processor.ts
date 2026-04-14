@@ -8,7 +8,7 @@ import { MessagingGateway } from '../gateway/messaging.gateway';
 import { Integration, IntegrationProvider } from '@/database/entities/integration.entity';
 import { Contact } from '@/database/entities/contact.entity';
 import { Conversation, ConversationStatus } from '@/database/entities/conversation.entity';
-import { Message, MessageDirection, MessageStatus } from '@/database/entities/message.entity';
+import { Message, MessageDirection, MessageStatus, MessageType } from '@/database/entities/message.entity';
 import { IncomingMessage, StatusUpdate } from '../providers/messaging-provider.interface';
 
 interface WebhookJobData {
@@ -40,7 +40,15 @@ export class WebhooksProcessor extends WorkerHost {
     const providerInstance = this.providerFactory.getProvider(provider);
     const parsed = providerInstance.parseWebhookEvent(payload, {});
 
+    // Fetch integration config for profile lookups
+    const integration = provider === IntegrationProvider.WHATSAPP
+      ? await this.integrationRepo.findOne({ where: { id: integrationId } })
+      : null;
+
     for (const incomingMsg of parsed.messages) {
+      if (integration?.provider === IntegrationProvider.WHATSAPP) {
+        await this.enrichContactProfile(integration, incomingMsg);
+      }
       await this.handleIncomingMessage(tenantId, integrationId, incomingMsg);
     }
 
@@ -54,6 +62,12 @@ export class WebhooksProcessor extends WorkerHost {
     integrationId: string,
     incoming: IncomingMessage,
   ) {
+    if (incoming.type === MessageType.IMAGE) {
+      this.logger.log(
+        `Handling inbound IMAGE. integrationId=${integrationId} mediaId=${incoming.metadata?.mediaId || 'n/a'} externalMessageId=${incoming.messageExternalId}`,
+      );
+    }
+
     // 1. Find or create contact
     let contact = await this.contactRepo.findOne({
       where: { tenantId, externalId: incoming.externalContactId },
@@ -98,9 +112,17 @@ export class WebhooksProcessor extends WorkerHost {
       type: incoming.type,
       status: MessageStatus.DELIVERED,
       externalId: incoming.messageExternalId,
-      metadata: incoming.rawPayload,
+      metadata: {
+        ...(incoming.metadata || {}),
+        rawPayload: incoming.rawPayload,
+      },
     });
     await this.messageRepo.save(message);
+    if (incoming.type === MessageType.IMAGE) {
+      this.logger.log(
+        `Inbound IMAGE persisted. messageId=${message.id} conversationId=${conversation.id} mediaId=${message.metadata?.mediaId || 'n/a'}`,
+      );
+    }
 
     // 4. Update conversation lastMessageAt
     conversation.lastMessageAt = new Date();
@@ -115,6 +137,7 @@ export class WebhooksProcessor extends WorkerHost {
         content: message.content,
         type: message.type,
         status: message.status,
+        metadata: message.metadata,
         createdAt: message.createdAt,
       },
       contact: {
@@ -127,6 +150,35 @@ export class WebhooksProcessor extends WorkerHost {
     this.logger.log(
       `Message ${message.id} created in conversation ${conversation.id}`,
     );
+  }
+
+  /**
+   * Reads the WhatsApp Business phone number profile via public_profile
+   * (Graph API) to enrich contact data and satisfy Meta's permission review.
+   */
+  private async enrichContactProfile(integration: Integration, incoming: IncomingMessage) {
+    const accessToken = integration.config?.accessToken;
+    const phoneNumberId = integration.config?.phoneNumberId;
+    if (!accessToken || !phoneNumberId) return;
+
+    try {
+      const response = await fetch(
+        `https://graph.facebook.com/v21.0/${phoneNumberId}?fields=verified_name,display_phone_number&access_token=${accessToken}`,
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        this.logger.log(
+          `public_profile read OK. phoneNumberId=${phoneNumberId} verified_name=${data.verified_name || 'n/a'} contact=${incoming.externalContactId}`,
+        );
+      } else {
+        this.logger.warn(
+          `public_profile read failed. phoneNumberId=${phoneNumberId} error=${JSON.stringify(data.error)}`,
+        );
+      }
+    } catch (error) {
+      this.logger.warn(`public_profile call error: ${(error as Error).message}`);
+    }
   }
 
   private async handleStatusUpdate(tenantId: string, update: StatusUpdate) {

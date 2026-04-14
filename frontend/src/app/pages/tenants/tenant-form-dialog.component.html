@@ -1,66 +1,110 @@
-<h2 mat-dialog-title>{{ isEdit ? 'Editar' : 'Nuevo' }} tenant</h2>
+<h2 mat-dialog-title class="!mb-1">{{ isEdit ? 'Editar' : 'Nuevo' }} tenant</h2>
 
-<mat-dialog-content class="flex flex-col gap-4 py-4">
+<mat-dialog-content class="flex flex-col gap-5 py-4">
   @if (error) {
-    <div class="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div class="bg-rose-500/15 border border-rose-500/30 text-rose-300 px-4 py-3 rounded-xl text-sm">
+      {{ error }}
+    </div>
   }
 
-  <mat-form-field appearance="outline">
-    <mat-label>Nombre de la empresa</mat-label>
-    <input matInput [(ngModel)]="companyName" (ngModelChange)="onNameChange()" placeholder="Ej: Mi Empresa SL" />
-  </mat-form-field>
+  <div class="space-y-1.5">
+    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Nombre de la empresa</label>
+    <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+      <input
+        [(ngModel)]="companyName"
+        (ngModelChange)="onNameChange()"
+        placeholder="Ej: Mi Empresa SL"
+        class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+      />
+    </div>
+  </div>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Slug</mat-label>
-    <input matInput [(ngModel)]="companySlug" placeholder="mi-empresa" />
-    <mat-hint>Identificador unico (se genera automaticamente)</mat-hint>
-  </mat-form-field>
+  <div class="space-y-1.5">
+    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Slug</label>
+    <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+      <input
+        [(ngModel)]="companySlug"
+        placeholder="mi-empresa"
+        class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+      />
+    </div>
+    <p class="text-xs text-slate-500 ml-1">Identificador unico (se genera automaticamente)</p>
+  </div>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Plan</mat-label>
-    <mat-select [(ngModel)]="planId">
-      @for (plan of plans; track plan.id) {
-        <mat-option [value]="plan.id">
-          {{ plan.name | uppercase }} - {{ plan.maxUsers === -1 ? 'Ilimitado' : plan.maxUsers }} usuarios, {{ plan.maxIntegrations === -1 ? 'Ilimitadas' : plan.maxIntegrations }} integraciones
-        </mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+  <div class="space-y-1.5">
+    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Plan</label>
+    <div class="bg-white/5 border border-border rounded-xl px-3 py-1.5 focus-within:border-primary/50 transition-all">
+      <mat-select
+        [(ngModel)]="planId"
+        placeholder="Selecciona un plan"
+        panelClass="nethylo-select-panel"
+        class="w-full"
+      >
+        @for (plan of plans; track plan.id) {
+          <mat-option [value]="plan.id">
+            {{ plan.name | uppercase }} - {{ plan.maxUsers === -1 ? 'Ilimitado' : plan.maxUsers }} usuarios, {{ plan.maxIntegrations === -1 ? 'Ilimitadas' : plan.maxIntegrations }} integraciones
+          </mat-option>
+        }
+      </mat-select>
+    </div>
+  </div>
 
   @if (!isEdit) {
-    <div class="border-t pt-4 mt-2">
-      <p class="text-sm font-medium text-gray-700 mb-3">Administrador del tenant</p>
+    <div class="border-t border-white/10 pt-5 mt-1 space-y-4">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrador del tenant</p>
 
-      <div class="flex gap-4">
-        <mat-form-field appearance="outline" class="flex-1">
-          <mat-label>Nombre</mat-label>
-          <input matInput [(ngModel)]="adminFirstName" />
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="flex-1">
-          <mat-label>Apellidos</mat-label>
-          <input matInput [(ngModel)]="adminLastName" />
-        </mat-form-field>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Nombre</label>
+          <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+            <input
+              [(ngModel)]="adminFirstName"
+              class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Apellidos</label>
+          <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+            <input
+              [(ngModel)]="adminLastName"
+              class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+            />
+          </div>
+        </div>
       </div>
 
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Email del administrador</mat-label>
-        <input matInput type="email" [(ngModel)]="adminEmail" />
-      </mat-form-field>
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Email del administrador</label>
+        <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+          <input
+            type="email"
+            [(ngModel)]="adminEmail"
+            class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+          />
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Contraseña</mat-label>
-        <input matInput type="password" [(ngModel)]="adminPassword" />
-        <mat-hint>Minimo 8 caracteres</mat-hint>
-      </mat-form-field>
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Contrasena</label>
+        <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+          <input
+            type="password"
+            [(ngModel)]="adminPassword"
+            class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+          />
+        </div>
+        <p class="text-xs text-slate-500 ml-1">Minimo 8 caracteres</p>
+      </div>
     </div>
   }
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancelar</button>
+<mat-dialog-actions align="end" class="!pt-4">
+  <button mat-button class="!text-slate-300 hover:!bg-white/10" (click)="cancel()">Cancelar</button>
   <button
-    mat-raised-button
-    color="primary"
+    class="bg-primary hover:bg-primary-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     [disabled]="!isValid() || loading"
     (click)="save()"
   >

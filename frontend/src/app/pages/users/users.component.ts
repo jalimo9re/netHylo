@@ -9,7 +9,9 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { UsersService, User } from '../../core/services/users.service';
 import { AuthService } from '../../core/services/auth.service';
+import { TenantsService, Tenant } from '../../core/services/tenants.service';
 import { UserFormDialogComponent } from './user-form-dialog.component';
+import { ResetPasswordDialogComponent } from './reset-password-dialog.component';
 
 @Component({
   selector: 'app-users',
@@ -25,31 +27,67 @@ import { UserFormDialogComponent } from './user-form-dialog.component';
     MatDialogModule,
   ],
   templateUrl: './users.component.html',
+  host: {
+    class: 'flex-1 flex flex-col min-h-0',
+  },
 })
 export class UsersComponent implements OnInit {
   users: User[] = [];
+  filteredUsers: User[] = [];
+  currentTenant: Tenant | null = null;
   loading = true;
   canManage = false;
+  isSuperadmin = false;
+  searchTerm = '';
+  tenantFilter = '';
+  tenantNames: string[] = [];
 
   constructor(
     private usersService: UsersService,
     private authService: AuthService,
+    private tenantsService: TenantsService,
     private dialog: MatDialog,
   ) {
     const role = this.authService.currentUser()?.role;
     this.canManage = role === 'admin' || role === 'superadmin';
+    this.isSuperadmin = role === 'superadmin';
   }
 
   ngOnInit() {
     this.loadUsers();
+    if (!this.isSuperadmin) {
+      this.tenantsService.findMe().subscribe(t => this.currentTenant = t);
+    }
   }
 
   loadUsers() {
     this.loading = true;
     this.usersService.findAll().subscribe((data) => {
       this.users = data;
+      if (this.isSuperadmin) {
+        this.tenantNames = [...new Set(
+          data.filter(u => u.tenant?.name).map(u => u.tenant!.name)
+        )].sort();
+      }
+      this.applyFilters();
       this.loading = false;
     });
+  }
+
+  applyFilters() {
+    let result = this.users;
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      result = result.filter(u =>
+        u.firstName.toLowerCase().includes(term) ||
+        u.lastName.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term)
+      );
+    }
+    if (this.tenantFilter) {
+      result = result.filter(u => u.tenant?.name === this.tenantFilter);
+    }
+    this.filteredUsers = result;
   }
 
   getRoleLabel(role: string): string {
@@ -87,6 +125,13 @@ export class UsersComponent implements OnInit {
     });
     ref.afterClosed().subscribe((result) => {
       if (result) this.loadUsers();
+    });
+  }
+
+  openResetPasswordDialog(user: User) {
+    this.dialog.open(ResetPasswordDialogComponent, {
+      width: '400px',
+      data: { user },
     });
   }
 

@@ -24,6 +24,9 @@ import { TenantFormDialogComponent } from './tenant-form-dialog.component';
     MatDialogModule,
   ],
   templateUrl: './tenants.component.html',
+  host: {
+    class: 'flex-1 flex flex-col min-h-0',
+  },
 })
 export class TenantsComponent implements OnInit {
   tenants: Tenant[] = [];

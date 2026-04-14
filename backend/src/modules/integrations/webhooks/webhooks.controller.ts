@@ -35,11 +35,15 @@ export class WebhooksController {
     @Param('provider') provider: IntegrationProvider,
     @Query() query: Record<string, string>,
   ) {
+    this.logger.log(`Webhook verification request for ${provider}: ${JSON.stringify(query)}`);
+
     const providerInstance = this.providerFactory.getProvider(provider);
 
     const integrations = await this.integrationRepo.find({
       where: { provider, status: IntegrationStatus.ACTIVE },
     });
+
+    this.logger.log(`Found ${integrations.length} active integrations for ${provider}`);
 
     for (const integration of integrations) {
       const result = providerInstance.handleVerification(query, integration.config);

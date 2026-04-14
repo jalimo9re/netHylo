@@ -15,6 +15,7 @@ import {
   Integration,
   ProviderSchema,
 } from '../../../core/services/integrations.service';
+import { TenantsService, Tenant } from '../../../core/services/tenants.service';
 import { IntegrationFormDialogComponent } from './integration-form-dialog.component';
 
 @Component({
@@ -31,14 +32,19 @@ import { IntegrationFormDialogComponent } from './integration-form-dialog.compon
     MatDialogModule,
   ],
   templateUrl: './integrations-settings.component.html',
+  host: {
+    class: 'flex-1 flex flex-col min-h-0',
+  },
 })
 export class IntegrationsSettingsComponent implements OnInit {
   integrations: Integration[] = [];
   schemas: Record<string, ProviderSchema> = {};
+  currentTenant: Tenant | null = null;
   loading = true;
 
   constructor(
     private integrationsService: IntegrationsService,
+    private tenantsService: TenantsService,
     private dialog: MatDialog,
   ) {}
 
@@ -48,6 +54,7 @@ export class IntegrationsSettingsComponent implements OnInit {
 
   loadData() {
     this.loading = true;
+    this.tenantsService.findMe().subscribe(t => this.currentTenant = t);
     this.integrationsService.getConfigSchema().subscribe((schemas) => {
       this.schemas = schemas;
     });

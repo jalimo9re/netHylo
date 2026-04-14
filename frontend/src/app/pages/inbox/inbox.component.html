@@ -1,15 +1,41 @@
-<!-- Inbox: 3-column layout (Modern Premium) -->
-<div class="flex h-full -m-8 glass border-none rounded-none overflow-hidden">
+<!-- Inbox: responsive layout -->
+<div class="flex flex-1 h-full min-h-0 -m-4 sm:-m-6 lg:-m-8 glass border-none rounded-none overflow-hidden">
 
   <!-- Column 1: Conversation List -->
-  <div class="w-80 border-r border-border bg-black/20 backdrop-blur-md flex flex-col">
-    <div class="p-6 border-b border-border">
-      <div class="flex justify-between items-center mb-6">
+  <div
+    class="w-full md:w-80 border-r border-border bg-black/20 backdrop-blur-md flex flex-col flex-shrink-0 min-h-0"
+    [class.hidden]="mobileView() === 'chat'"
+    [class.md:flex]="true"
+  >
+    <div class="p-4 sm:p-6 border-b border-border">
+      <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold font-display text-slate-100">Chats</h2>
-        <button class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-          <mat-icon class="text-lg">add</mat-icon>
+      </div>
+
+      <!-- Status filter tabs -->
+      <div class="flex gap-1 bg-white/5 rounded-xl p-1 mb-4">
+        <button
+          (click)="setFilter('open')"
+          class="flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+          [class]="statusFilter() === 'open' ? 'bg-primary/20 text-primary' : 'text-slate-500 hover:text-slate-300'"
+        >
+          Pendientes
+          @if (openCount > 0) {
+            <span class="ml-1.5 bg-primary/30 text-primary px-1.5 py-0.5 rounded-full text-[10px]">{{ openCount }}</span>
+          }
+        </button>
+        <button
+          (click)="setFilter('closed')"
+          class="flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+          [class]="statusFilter() === 'closed' ? 'bg-slate-500/20 text-slate-300' : 'text-slate-500 hover:text-slate-300'"
+        >
+          Cerrados
+          @if (closedCount > 0) {
+            <span class="ml-1.5 bg-slate-500/30 text-slate-400 px-1.5 py-0.5 rounded-full text-[10px]">{{ closedCount }}</span>
+          }
         </button>
       </div>
+
       <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 group focus-within:border-primary/50 transition-all">
         <mat-icon class="text-slate-500 text-sm group-focus-within:text-primary transition-colors">search</mat-icon>
         <input
@@ -20,197 +46,376 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto custom-scrollbar">
-      @if (conversations.length === 0) {
+    <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
+      @if (loading) {
+        <div class="p-8 text-center">
+          <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      } @else if (filteredConversations().length === 0) {
         <div class="p-8 text-center">
           <div class="w-16 h-16 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
-            <mat-icon class="text-slate-500 text-3xl">inbox</mat-icon>
+            <mat-icon class="text-slate-500 text-3xl">{{ statusFilter() === 'open' ? 'inbox' : 'check_circle' }}</mat-icon>
           </div>
-          <p class="text-slate-300 font-medium text-sm">No hay conversaciones</p>
-          <p class="text-xs text-slate-500 mt-2 leading-relaxed">Conecta una integración para empezar a recibir mensajes</p>
+          <p class="text-slate-300 font-medium text-sm">
+            {{ statusFilter() === 'open' ? 'No hay conversaciones pendientes' : 'No hay conversaciones cerradas' }}
+          </p>
         </div>
-      }
-      @for (conv of conversations; track conv.id) {
-        <div
-          (click)="selectConversation(conv)"
-          class="group flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-white/5 transition-all relative border-b border-white/[0.03]"
-          [ngClass]="{ 'bg-white/5': selectedConversation?.id === conv.id }"
-        >
-          @if (selectedConversation?.id === conv.id) {
-            <div class="absolute left-0 top-4 bottom-4 w-1 bg-primary rounded-r-full shadow-[0_0_12px_rgba(99,102,241,0.5)]"></div>
-          }
-          
-          <div class="relative">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold text-lg border border-white/5 shadow-inner">
-              {{ conv.contactName.charAt(0) }}
+      } @else {
+        @for (conv of filteredConversations(); track conv.id) {
+          <div
+            (click)="selectConversation(conv)"
+            class="group flex items-center gap-4 px-4 sm:px-6 py-4 cursor-pointer hover:bg-white/5 transition-all relative border-b border-white/[0.03]"
+            [ngClass]="{ 'bg-white/5': selectedConversation?.id === conv.id }"
+          >
+            @if (selectedConversation?.id === conv.id) {
+              <div class="absolute left-0 top-4 bottom-4 w-1 bg-primary rounded-r-full shadow-[0_0_12px_rgba(99,102,241,0.5)]"></div>
+            }
+
+            <div class="relative flex-shrink-0">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-bold text-lg border border-white/5 shadow-inner">
+                {{ (conv.contact?.name || '?').charAt(0) }}
+              </div>
+              <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                <mat-icon class="text-[10px] w-auto h-auto text-primary">{{ getProviderIcon(conv.integration?.provider || '') }}</mat-icon>
+              </div>
             </div>
-            <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
-              <mat-icon class="text-[10px] w-auto h-auto text-primary">{{ getProviderIcon(selectedConversation?.provider || '') }}</mat-icon>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-center mb-0.5">
+                <span class="font-semibold text-sm truncate" [class.text-white]="selectedConversation?.id === conv.id" [class.text-slate-300]="selectedConversation?.id !== conv.id">
+                  {{ conv.contact?.name || conv.contact?.phone || 'Sin nombre' }}
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase flex-shrink-0 ml-2">{{ getTimeAgo(conv.lastMessageAt) }}</span>
+              </div>
+              <p class="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">
+                {{ conv.integration?.name }}
+              </p>
             </div>
           </div>
-          
-          <div class="flex-1 min-w-0">
-            <div class="flex justify-between items-center mb-0.5">
-              <span class="font-semibold text-sm truncate" [class.text-white]="selectedConversation?.id === conv.id" [class.text-slate-300]="selectedConversation?.id !== conv.id">
-                {{ conv.contactName }}
-              </span>
-              <span class="text-[10px] font-bold text-slate-500 uppercase">{{ conv.time }}</span>
-            </div>
-            <p class="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">{{ conv.lastMessage }}</p>
-          </div>
-          
-          @if (conv.unread) {
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-          }
-        </div>
+        }
       }
     </div>
   </div>
 
   <!-- Column 2: Active Conversation -->
-  <div class="flex-1 flex flex-col bg-background relative">
-    <!-- Hero-like background effect -->
+  <div
+    class="flex-1 flex flex-col bg-background relative min-w-0 min-h-0"
+    [class.hidden]="mobileView() === 'list'"
+    [class.md:flex]="true"
+  >
     <div class="absolute inset-0 bg-hero-gradient pointer-events-none opacity-60"></div>
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 
     @if (selectedConversation) {
       <!-- Chat header -->
-      <div class="h-20 px-8 flex items-center justify-between bg-black/20 backdrop-blur-md border-b border-border z-10">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary p-[1px] shadow-lg shadow-primary/20">
-            <div class="w-full h-full rounded-[15px] bg-slate-900 flex items-center justify-center text-white text-lg font-bold">
-              {{ selectedConversation.contactName.charAt(0) }}
+      <div class="h-16 sm:h-20 px-4 sm:px-8 flex items-center justify-between bg-black/20 backdrop-blur-md border-b border-border z-10">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <button class="md:hidden p-1 text-slate-400 hover:text-white" (click)="backToList()">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary p-[1px] shadow-lg shadow-primary/20">
+            <div class="w-full h-full rounded-[15px] bg-slate-900 flex items-center justify-center text-white text-base sm:text-lg font-bold">
+              {{ (selectedConversation.contact?.name || '?').charAt(0) }}
             </div>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <p class="font-bold text-white tracking-tight">{{ selectedConversation.contactName }}</p>
-              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              <p class="font-bold text-white tracking-tight text-sm sm:text-base">
+                {{ selectedConversation.contact?.name || selectedConversation.contact?.phone || 'Sin nombre' }}
+              </p>
             </div>
             <p class="text-xs text-slate-400 font-medium flex items-center gap-1.5 mt-0.5 uppercase tracking-wider">
-              <mat-icon class="text-xs w-auto h-auto text-primary">{{ getProviderIcon(selectedConversation.provider) }}</mat-icon>
-              {{ selectedConversation.provider }}
+              <mat-icon class="text-xs w-auto h-auto text-primary">{{ getProviderIcon(selectedConversation.integration?.provider || '') }}</mat-icon>
+              {{ selectedConversation.integration?.name }}
             </p>
           </div>
         </div>
-        
-        <div class="flex items-center gap-2">
-          <button class="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-            <mat-icon>videocam</mat-icon>
-          </button>
-          <button class="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-            <mat-icon>call</mat-icon>
-          </button>
-          <div class="w-px h-6 bg-border mx-2"></div>
-          <button class="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-            <mat-icon>more_horiz</mat-icon>
+
+        <div class="flex items-center gap-1 sm:gap-2">
+          <!-- Close / Reopen button -->
+          <button
+            (click)="toggleConversationStatus()"
+            class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+            [class]="selectedConversation.status === 'open'
+              ? 'text-green-400 bg-green-500/10 hover:bg-green-500/20'
+              : 'text-slate-400 bg-white/5 hover:bg-white/10'"
+          >
+            <mat-icon class="text-sm">{{ selectedConversation.status === 'open' ? 'check_circle' : 'refresh' }}</mat-icon>
+            <span class="hidden sm:inline">{{ selectedConversation.status === 'open' ? 'Cerrar' : 'Reabrir' }}</span>
           </button>
         </div>
       </div>
 
       <!-- Messages area -->
-      <div class="flex-1 p-8 overflow-y-auto z-10 custom-scrollbar flex flex-col gap-6">
-        <div class="text-center my-4">
-          <span class="px-4 py-1.5 rounded-full bg-white/5 border border-border text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hoy</span>
-        </div>
-        
-        <div class="flex flex-col items-center justify-center flex-1 text-slate-500 opacity-40">
-           <mat-icon class="text-6xl mb-4">auto_awesome</mat-icon>
-           <p class="text-lg font-display">Historial de mensajes protegido</p>
-           <p class="text-sm">Tus conversaciones están cifradas de extremo a extremo</p>
-        </div>
+      <div #scrollContainer class="flex-1 min-h-0 p-4 sm:p-8 overflow-y-auto z-10 custom-scrollbar pr-2 flex flex-col gap-3">
+        @if (messages.length === 0) {
+          <div class="flex flex-col items-center justify-center flex-1 text-slate-500 opacity-40">
+            <mat-icon class="text-6xl mb-4">chat_bubble_outline</mat-icon>
+            <p class="text-sm">No hay mensajes en esta conversacion</p>
+          </div>
+        } @else {
+          @for (msg of messages; track msg.id) {
+            <div
+              class="flex"
+              [class.justify-end]="msg.direction === 'outbound'"
+              [class.justify-start]="msg.direction === 'inbound'"
+            >
+              <div
+                class="max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-3 text-sm"
+                [class]="msg.direction === 'outbound'
+                  ? 'bg-primary/20 text-slate-100 rounded-br-md'
+                  : 'bg-white/5 text-slate-200 rounded-bl-md border border-white/5'"
+              >
+                @if (msg.direction === 'outbound' && msg.senderUser) {
+                  <p class="text-[10px] font-bold text-primary mb-1 uppercase tracking-wider">
+                    {{ msg.senderUser.firstName }}
+                  </p>
+                }
+                @if (msg.type === 'image') {
+                  @if (getMediaUrl(msg)) {
+                    <img
+                      [src]="getMediaUrl(msg)"
+                      alt="Imagen"
+                      class="rounded-xl max-h-72 w-auto border border-white/10 cursor-pointer"
+                      loading="lazy"
+                    />
+                  } @else if (mediaFailed[msg.id]) {
+                    <button (click)="retryMediaLoad(msg)" class="flex items-center gap-2 text-red-400 hover:text-red-300 py-2 transition-colors">
+                      <mat-icon class="text-lg">broken_image</mat-icon>
+                      <span class="text-xs">Error al cargar. Toca para reintentar</span>
+                    </button>
+                  } @else {
+                    <div class="flex items-center gap-3 py-4 px-2">
+                      <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span class="text-xs text-slate-400">Descargando imagen...</span>
+                    </div>
+                  }
+                  @if (msg.metadata?.['caption']) {
+                    <p class="break-words whitespace-pre-wrap mt-2">{{ msg.metadata?.['caption'] }}</p>
+                  }
+                } @else if (msg.type === 'video') {
+                  @if (getMediaUrl(msg)) {
+                    <video
+                      [src]="getMediaUrl(msg)"
+                      controls
+                      class="rounded-xl max-h-72 w-auto border border-white/10"
+                      preload="metadata"
+                    ></video>
+                  } @else if (mediaFailed[msg.id]) {
+                    <button (click)="retryMediaLoad(msg)" class="flex items-center gap-2 text-red-400 hover:text-red-300 py-2 transition-colors">
+                      <mat-icon class="text-lg">videocam_off</mat-icon>
+                      <span class="text-xs">Error al cargar. Toca para reintentar</span>
+                    </button>
+                  } @else {
+                    <div class="flex items-center gap-3 py-4 px-2">
+                      <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span class="text-xs text-slate-400">Descargando video...</span>
+                    </div>
+                  }
+                  @if (msg.metadata?.['caption']) {
+                    <p class="break-words whitespace-pre-wrap mt-2">{{ msg.metadata?.['caption'] }}</p>
+                  }
+                } @else if (msg.type === 'audio') {
+                  @if (getMediaUrl(msg)) {
+                    <audio
+                      [src]="getMediaUrl(msg)"
+                      controls
+                      class="max-w-full"
+                      preload="metadata"
+                    ></audio>
+                  } @else if (mediaFailed[msg.id]) {
+                    <button (click)="retryMediaLoad(msg)" class="flex items-center gap-2 text-red-400 hover:text-red-300 py-2 transition-colors">
+                      <mat-icon class="text-lg">mic_off</mat-icon>
+                      <span class="text-xs">Error al cargar. Toca para reintentar</span>
+                    </button>
+                  } @else {
+                    <div class="flex items-center gap-3 py-4 px-2">
+                      <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span class="text-xs text-slate-400">Descargando audio...</span>
+                    </div>
+                  }
+                } @else if (msg.type === 'file') {
+                  @if (getMediaUrl(msg)) {
+                    <a
+                      [href]="getMediaUrl(msg)"
+                      [download]="msg.metadata?.['fileName'] || 'archivo'"
+                      class="flex items-center gap-3 bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors"
+                      target="_blank"
+                    >
+                      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <mat-icon class="text-primary">description</mat-icon>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-200 truncate">{{ msg.metadata?.['fileName'] || 'Archivo' }}</p>
+                        <p class="text-[10px] text-slate-500 uppercase">{{ msg.metadata?.['mimeType'] || 'Documento' }}</p>
+                      </div>
+                      <mat-icon class="text-slate-500 text-lg flex-shrink-0">download</mat-icon>
+                    </a>
+                  } @else if (mediaFailed[msg.id]) {
+                    <button (click)="retryMediaLoad(msg)" class="flex items-center gap-3 bg-red-500/10 rounded-xl p-3 hover:bg-red-500/20 transition-colors w-full">
+                      <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                        <mat-icon class="text-red-400">error_outline</mat-icon>
+                      </div>
+                      <div class="min-w-0 text-left">
+                        <p class="text-xs font-semibold text-red-300">Error al descargar</p>
+                        <p class="text-[10px] text-red-400/70">Toca para reintentar</p>
+                      </div>
+                    </button>
+                  } @else {
+                    <div class="flex items-center gap-3 bg-white/5 rounded-xl p-3">
+                      <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-200 truncate">{{ msg.metadata?.['fileName'] || 'Archivo' }}</p>
+                        <p class="text-[10px] text-slate-400">Descargando...</p>
+                      </div>
+                    </div>
+                  }
+                  @if (msg.metadata?.['caption']) {
+                    <p class="break-words whitespace-pre-wrap mt-2">{{ msg.metadata?.['caption'] }}</p>
+                  }
+                } @else {
+                  <p class="break-words whitespace-pre-wrap">{{ msg.content }}</p>
+                }
+                <div class="flex items-center justify-end gap-2 mt-1.5">
+                  <span class="text-[10px] text-slate-500">{{ msg.createdAt | date:'HH:mm' }}</span>
+                  @if (msg.direction === 'outbound') {
+                    <mat-icon class="text-[12px] w-auto h-auto" [class]="msg.status === 'read' ? 'text-blue-400' : 'text-slate-500'">
+                      {{ msg.status === 'failed' ? 'error' : 'done_all' }}
+                    </mat-icon>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        }
       </div>
 
       <!-- Input -->
-      <div class="p-6 bg-black/20 backdrop-blur-md border-t border-border z-10">
-        <div class="flex gap-4 bg-white/5 border border-border rounded-2xl p-2 focus-within:border-primary/50 transition-all">
-          <button class="p-2 text-slate-400 hover:text-white transition-colors">
-            <mat-icon>add_circle_outline</mat-icon>
+      <div class="p-3 sm:p-6 bg-black/20 backdrop-blur-md border-t border-border z-10">
+        <input
+          #imageInput
+          type="file"
+          accept="image/*"
+          class="hidden"
+          (change)="onImageSelected($event)"
+        />
+
+        @if (selectedImageDataUrl) {
+          <div class="mb-3 bg-white/5 border border-border rounded-xl p-2.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <img [src]="selectedImageDataUrl" alt="preview" class="w-12 h-12 rounded-lg object-cover border border-white/10" />
+              <div class="min-w-0">
+                <p class="text-xs text-slate-200 font-medium truncate">{{ selectedImageName || 'Imagen seleccionada' }}</p>
+                <p class="text-[10px] text-slate-500">Se enviará como imagen</p>
+              </div>
+            </div>
+            <button type="button" (click)="clearImageSelection()" class="p-1.5 text-slate-400 hover:text-rose-400 transition-colors">
+              <mat-icon class="text-base">close</mat-icon>
+            </button>
+          </div>
+        }
+
+        <form (ngSubmit)="sendMessage()" class="flex gap-2 sm:gap-4 bg-white/5 border border-border rounded-2xl p-2 focus-within:border-primary/50 transition-all">
+          <button type="button" (click)="triggerImagePicker()" class="p-2 text-slate-400 hover:text-white transition-colors flex-shrink-0">
+            <mat-icon>image</mat-icon>
           </button>
           <input
             type="text"
-            placeholder="Escribe un mensaje para {{ selectedConversation.contactName }}..."
-            class="flex-1 bg-transparent border-none outline-none text-sm text-slate-200 placeholder:text-slate-600"
+            [(ngModel)]="newMessage"
+            name="message"
+            [placeholder]="selectedImageDataUrl ? 'Añade un texto opcional...' : 'Escribe un mensaje...'"
+            class="flex-1 bg-transparent border-none outline-none text-sm text-slate-200 placeholder:text-slate-600 min-w-0"
+            [disabled]="sendingMessage"
           />
-          <button class="bg-primary text-white p-2.5 rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary/20 group">
+          <button
+            type="submit"
+            [disabled]="(!newMessage.trim() && !selectedImageDataUrl) || sendingMessage"
+            class="bg-primary text-white p-2.5 rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary/20 group flex-shrink-0 disabled:opacity-50"
+          >
             <mat-icon class="text-lg group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">send</mat-icon>
           </button>
-        </div>
+        </form>
       </div>
     } @else {
-      <div class="flex-1 flex items-center justify-center text-slate-400 z-10 px-12">
+      <div class="flex-1 flex items-center justify-center text-slate-400 z-10 px-8 sm:px-12">
         <div class="text-center max-w-sm">
-          <div class="w-24 h-24 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/5 shadow-2xl">
-            <mat-icon class="text-5xl gradient-text">forum</mat-icon>
+          <div class="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 border border-white/5 shadow-2xl">
+            <mat-icon class="text-4xl sm:text-5xl gradient-text">forum</mat-icon>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-2 font-display">Tus Mensajes</h3>
-          <p class="text-slate-500 leading-relaxed font-medium">Selecciona una conversación del lateral para empezar a chatear o gestiona tus integraciones.</p>
+          <h3 class="text-xl sm:text-2xl font-bold text-white mb-2 font-display">Tus Mensajes</h3>
+          <p class="text-slate-500 leading-relaxed font-medium text-sm sm:text-base">Selecciona una conversacion para empezar a chatear.</p>
         </div>
       </div>
     }
   </div>
 
-  <!-- Column 3: Contact Info / CRM -->
-  <div class="w-80 border-l border-border bg-black/20 backdrop-blur-md p-8 overflow-y-auto hidden lg:flex flex-col">
+  <!-- Column 3: Contact Info (desktop only) -->
+  <div class="w-80 border-l border-border bg-black/20 backdrop-blur-md p-8 overflow-y-auto custom-scrollbar pr-2 hidden xl:flex flex-col flex-shrink-0 min-h-0">
     @if (selectedConversation) {
       <div class="text-center mb-10">
         <div class="relative inline-block mb-6">
           <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 p-[1px] shadow-2xl">
             <div class="w-full h-full rounded-[23px] bg-slate-900 flex items-center justify-center text-white text-3xl font-bold">
-              {{ selectedConversation.contactName.charAt(0) }}
+              {{ (selectedConversation.contact?.name || '?').charAt(0) }}
             </div>
           </div>
-          <div class="absolute -bottom-2 -right-2 w-8 h-8 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-lg">
-             <mat-icon class="text-xs text-primary">{{ getProviderIcon(selectedConversation.provider) }}</mat-icon>
-          </div>
         </div>
-        <h3 class="text-xl font-bold text-white tracking-tight mb-1">{{ selectedConversation.contactName }}</h3>
-        <p class="text-sm text-slate-400 font-medium">Cliente desde Marzo 2026</p>
+        <h3 class="text-xl font-bold text-white tracking-tight mb-1">
+          {{ selectedConversation.contact?.name || 'Sin nombre' }}
+        </h3>
+        <p class="text-sm text-slate-400 font-medium">
+          {{ selectedConversation.contact?.phone }}
+        </p>
       </div>
-      
+
       <div class="space-y-8">
         <div>
-          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Detalles del Canal</p>
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Canal</p>
           <div class="bg-white/5 border border-border rounded-2xl p-4 flex items-center gap-4">
             <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <mat-icon>{{ getProviderIcon(selectedConversation.provider) }}</mat-icon>
+              <mat-icon>{{ getProviderIcon(selectedConversation.integration?.provider || '') }}</mat-icon>
             </div>
             <div>
-              <p class="text-xs font-bold text-slate-300 uppercase leading-none mb-1">{{ selectedConversation.provider }}</p>
-              <p class="text-[10px] text-slate-500 font-medium">ID: 88294123</p>
+              <p class="text-xs font-bold text-slate-300 leading-none mb-1">{{ selectedConversation.integration?.name }}</p>
+              <p class="text-[10px] text-slate-500 font-medium uppercase">{{ selectedConversation.integration?.provider }}</p>
             </div>
-          </div>
-        </div>
-        
-        <div>
-          <div class="flex justify-between items-center mb-4">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Notas del Contacto</p>
-            <button class="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary-400 transition-colors">Editar</button>
-          </div>
-          <div class="bg-white/5 border border-border border-dashed rounded-2xl p-6 text-center">
-            <mat-icon class="text-slate-600 mb-2">sticky_note_2</mat-icon>
-            <p class="text-xs text-slate-500 font-medium italic">No hay notas registradas para este contacto</p>
           </div>
         </div>
 
+        @if (selectedConversation.contact?.email) {
+          <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Email</p>
+            <p class="text-sm text-slate-300">{{ selectedConversation.contact.email }}</p>
+          </div>
+        }
+
         <div>
-           <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Acciones Rápidas</p>
-           <div class="grid grid-cols-2 gap-3">
-              <button class="flex flex-col items-center gap-2 p-4 bg-white/5 border border-border rounded-2xl hover:bg-white/10 transition-all group">
-                <mat-icon class="text-slate-400 group-hover:text-primary transition-colors">assignment</mat-icon>
-                <span class="text-[10px] font-bold text-slate-300 uppercase">Ticket</span>
-              </button>
-              <button class="flex flex-col items-center gap-2 p-4 bg-white/5 border border-border rounded-2xl hover:bg-white/10 transition-all group">
-                <mat-icon class="text-slate-400 group-hover:text-accent transition-colors">flag</mat-icon>
-                <span class="text-[10px] font-bold text-slate-300 uppercase">Priorizar</span>
-              </button>
-           </div>
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Estado</p>
+          <button
+            (click)="toggleConversationStatus()"
+            class="flex items-center gap-2 text-xs px-3 py-2 rounded-xl font-bold uppercase transition-all"
+            [class]="selectedConversation.status === 'open'
+              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+              : 'bg-slate-500/20 text-slate-400 hover:bg-slate-500/30'"
+          >
+            <mat-icon class="text-sm">{{ selectedConversation.status === 'open' ? 'check_circle' : 'refresh' }}</mat-icon>
+            {{ selectedConversation.status === 'open' ? 'Abierta - Cerrar' : 'Cerrada - Reabrir' }}
+          </button>
         </div>
+
+        @if (selectedConversation.assignedUser) {
+          <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Asignada a</p>
+            <p class="text-sm text-slate-300">{{ selectedConversation.assignedUser.firstName }} {{ selectedConversation.assignedUser.lastName }}</p>
+          </div>
+        }
       </div>
     } @else {
       <div class="flex-1 flex flex-col items-center justify-center text-slate-600">
         <mat-icon class="text-5xl mb-4 opacity-50">person_search</mat-icon>
-        <p class="text-xs font-bold uppercase tracking-widest">Información de Perfil</p>
+        <p class="text-xs font-bold uppercase tracking-widest">Informacion de Contacto</p>
       </div>
     }
   </div>

@@ -2,8 +2,6 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { TenantsService, Tenant } from '../../core/services/tenants.service';
@@ -16,8 +14,6 @@ import { PlansService, Plan } from '../../core/services/plans.service';
     CommonModule,
     FormsModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
     MatSelectModule,
   ],

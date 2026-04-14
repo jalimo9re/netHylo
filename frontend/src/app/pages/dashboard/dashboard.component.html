@@ -1,17 +1,17 @@
 <div>
-  <h2 class="text-3xl font-bold mb-10 font-display tracking-tight text-white">Dashboard</h2>
+  <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-10 font-display tracking-tight text-white">Dashboard</h2>
 
   <!-- Stats Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 mb-12">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-8 sm:mb-12">
     @for (stat of stats; track stat.label) {
-      <div class="glass p-6 rounded-3xl hover:scale-[1.02] transition-all cursor-default group border-white/5 shadow-xl shadow-black/20">
-        <div class="flex items-center gap-5">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors">
-            <mat-icon class="text-primary text-2xl">{{ stat.icon }}</mat-icon>
+      <div class="glass p-4 sm:p-6 rounded-2xl sm:rounded-3xl hover:scale-[1.02] transition-all cursor-default group border-white/5 shadow-xl shadow-black/20">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+          <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors flex-shrink-0">
+            <mat-icon class="text-primary text-xl sm:text-2xl">{{ stat.icon }}</mat-icon>
           </div>
           <div>
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{{ stat.label }}</p>
-            <p class="text-3xl font-black text-white tracking-tighter">{{ stat.value }}</p>
+            <p class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{{ stat.label }}</p>
+            <p class="text-2xl sm:text-3xl font-black text-white tracking-tighter">{{ stat.value }}</p>
           </div>
         </div>
       </div>
@@ -19,17 +19,46 @@
   </div>
 
   <!-- Recent Activity -->
-  <div class="glass p-10 rounded-3xl border-white/5">
-    <div class="flex items-center justify-between mb-8">
-      <h3 class="text-xl font-bold text-white font-display">Actividad reciente</h3>
-      <button class="text-sm font-bold text-primary hover:text-primary-400 transition-colors">Ver todo</button>
+  <div class="glass p-6 sm:p-10 rounded-2xl sm:rounded-3xl border-white/5">
+    <div class="flex items-center justify-between mb-6 sm:mb-8">
+      <h3 class="text-lg sm:text-xl font-bold text-white font-display">Actividad reciente</h3>
+      <a routerLink="/inbox" class="text-sm font-bold text-primary hover:text-primary-400 transition-colors">Ver todo</a>
     </div>
-    <div class="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-white/5 rounded-2xl">
-      <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
-        <mat-icon class="text-slate-600 text-4xl">history</mat-icon>
+
+    @if (activity.length === 0) {
+      <div class="flex flex-col items-center justify-center py-10 sm:py-16 text-center border-2 border-dashed border-white/5 rounded-2xl">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+          <mat-icon class="text-slate-600 text-3xl sm:text-4xl">history</mat-icon>
+        </div>
+        <p class="text-slate-400 font-medium text-base sm:text-lg mb-2">No hay actividad reciente</p>
+        <p class="text-slate-600 text-xs sm:text-sm max-w-xs px-4">Tus interacciones apareceran aqui una vez que conectes tus canales de comunicacion.</p>
       </div>
-      <p class="text-slate-400 font-medium text-lg mb-2">No hay actividad reciente</p>
-      <p class="text-slate-600 text-sm max-w-xs">Tus interacciones aparecerán aquí una vez que conectes tus canales de comunicación.</p>
-    </div>
+    } @else {
+      <div class="space-y-1">
+        @for (item of activity; track item.id) {
+          <div class="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all group">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              [class]="item.type === 'received' ? 'bg-blue-500/10 text-blue-400' : 'bg-green-500/10 text-green-400'">
+              <mat-icon class="text-lg">{{ item.type === 'received' ? 'call_received' : 'call_made' }}</mat-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-sm font-semibold text-slate-200 truncate">{{ item.contactName }}</span>
+                @if (item.messageType !== 'text') {
+                  <span class="text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded uppercase">{{ item.messageType }}</span>
+                }
+              </div>
+              <p class="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">
+                @if (item.senderUser) {
+                  <span class="text-primary/70">{{ item.senderUser }}:</span>
+                }
+                {{ item.content }}
+              </p>
+            </div>
+            <span class="text-[10px] font-bold text-slate-600 uppercase flex-shrink-0">{{ getTimeAgo(item.createdAt) }}</span>
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>

@@ -48,7 +48,7 @@ export class Integration {
   @Column({ type: 'jsonb', default: {} })
   config: Record<string, any>;
 
-  @Column({ type: 'enum', enum: IntegrationStatus, default: IntegrationStatus.INACTIVE })
+  @Column({ type: 'enum', enum: IntegrationStatus, default: IntegrationStatus.ACTIVE })
   status: IntegrationStatus;
 
   @OneToMany(() => Conversation, (conversation) => conversation.integration)

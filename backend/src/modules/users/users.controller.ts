@@ -22,11 +22,17 @@ export class UsersController {
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   findAll(@Request() req: any) {
+    if (req.user?.role === UserRole.SUPERADMIN) {
+      return this.usersService.findAllGlobal();
+    }
     return this.usersService.findAllByTenant(req.tenantId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string, @Request() req: any) {
+    if (req.user?.role === UserRole.SUPERADMIN) {
+      return this.usersService.findOneGlobal(id);
+    }
     return this.usersService.findOne(id, req.tenantId);
   }
 
@@ -41,6 +47,15 @@ export class UsersController {
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   update(@Param('id') id: string, @Body() data: any, @Request() req: any) {
+    if (req.user?.role === UserRole.SUPERADMIN) {
+      return this.usersService.updateGlobal(id, data);
+    }
     return this.usersService.update(id, req.tenantId, data);
+  }
+
+  @Patch(':id/reset-password')
+  @Roles(UserRole.SUPERADMIN)
+  resetPassword(@Param('id') id: string, @Body('password') password: string) {
+    return this.usersService.resetPassword(id, password);
   }
 }

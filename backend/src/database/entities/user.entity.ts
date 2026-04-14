@@ -49,6 +49,15 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isTwoFactorEnabled: boolean;
+
+  @Column({ nullable: true })
+  twoFactorSecret: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  twoFactorMethod: 'authenticator' | 'email' | null;
+
   @OneToMany(() => Conversation, (conversation) => conversation.assignedUser)
   assignedConversations: Conversation[];
 

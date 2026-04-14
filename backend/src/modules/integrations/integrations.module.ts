@@ -11,6 +11,7 @@ import { Tenant } from '@/database/entities/tenant.entity';
 import { User } from '@/database/entities/user.entity';
 import { IntegrationsService } from './integrations.service';
 import { IntegrationsController } from './integrations.controller';
+import { MetaOAuthController } from './oauth/meta-oauth.controller';
 import { WebhooksController } from './webhooks/webhooks.controller';
 import { WebhooksProcessor } from './webhooks/webhooks.processor';
 import { MessagingGateway } from './gateway/messaging.gateway';
@@ -51,7 +52,7 @@ import { TikTokProvider } from './providers/tiktok.provider';
     WebhooksProcessor,
     MessagingGateway,
   ],
-  controllers: [IntegrationsController, WebhooksController],
+  controllers: [IntegrationsController, MetaOAuthController, WebhooksController],
   exports: [IntegrationsService, ProviderFactory, MessagingGateway],
 })
 export class IntegrationsModule {}

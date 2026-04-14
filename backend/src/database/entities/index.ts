@@ -5,3 +5,4 @@ export { Integration, IntegrationProvider, IntegrationStatus } from './integrati
 export { Contact } from './contact.entity';
 export { Conversation, ConversationStatus } from './conversation.entity';
 export { Message, MessageDirection, MessageType, MessageStatus } from './message.entity';
+export { ActionIntegration, ActionProviderType, ActionIntegrationStatus } from './action-integration.entity';

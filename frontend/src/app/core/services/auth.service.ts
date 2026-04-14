@@ -5,7 +5,11 @@ import { tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 interface LoginResponse {
-  access_token: string;
+  access_token?: string;
+  mfaRequired?: boolean;
+  mfaEnabled?: boolean;
+  mfaMethod?: 'authenticator' | 'email';
+  tempToken?: string;
 }
 
 interface RegisterResponse {
@@ -42,7 +46,32 @@ export class AuthService {
   login(email: string, password: string) {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password })
-      .pipe(tap((res) => this.setToken(res.access_token)));
+      .pipe(tap((res) => {
+        if (res.access_token) this.setToken(res.access_token);
+      }));
+  }
+
+  verifyMfa(tempToken: string, code: string) {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/auth/mfa/verify`, { tempToken, code })
+      .pipe(tap((res) => {
+        if (res.access_token) this.setToken(res.access_token);
+      }));
+  }
+
+  setupMfaInit(tempToken: string, method: 'authenticator' | 'email') {
+    return this.http.post<any>(`${environment.apiUrl}/auth/mfa/setup-init`, { tempToken, method });
+  }
+
+  setupMfaConfirm(tempToken: string, code: string) {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/mfa/setup-confirm`, { tempToken, code })
+      .pipe(tap((res) => {
+        if (res.access_token) this.setToken(res.access_token);
+      }));
+  }
+
+  resendMfaCode(tempToken: string) {
+    return this.http.post<void>(`${environment.apiUrl}/auth/mfa/resend`, { tempToken });
   }
 
   register(data: {

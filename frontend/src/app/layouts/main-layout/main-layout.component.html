@@ -1,9 +1,26 @@
-<div class="flex min-h-screen bg-background text-foreground selection:bg-primary/30">
-  <app-sidebar />
-  <div class="flex-1 ml-64 flex flex-col">
-    <app-topbar />
-    <main class="mt-16 p-8 flex-1 overflow-hidden">
-      <router-outlet />
+<div class="flex h-screen overflow-hidden bg-background text-foreground selection:bg-primary/30">
+  <!-- Overlay for mobile sidebar -->
+  @if (sidebarOpen()) {
+    <div
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+      (click)="closeSidebar()"
+    ></div>
+  }
+
+  <!-- Sidebar -->
+  <app-sidebar
+    [class]="sidebarOpen() ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    class="fixed z-50 transition-transform duration-300 ease-in-out"
+    (navClicked)="closeSidebar()"
+  />
+
+  <!-- Main area -->
+  <div class="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
+    <app-topbar (menuToggle)="toggleSidebar()" />
+    <main class="flex-1 flex flex-col min-h-0 pt-16">
+      <div class="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
+        <router-outlet />
+      </div>
     </main>
   </div>
 </div>

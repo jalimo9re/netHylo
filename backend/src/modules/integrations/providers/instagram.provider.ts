@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import {
   MessagingProviderBase,
@@ -12,11 +12,13 @@ import {
 import { IntegrationProvider } from '@/database/entities/integration.entity';
 import { MessageType } from '@/database/entities/message.entity';
 
-const INSTAGRAM_API_URL = 'https://graph.instagram.com/v21.0';
+// Instagram Messaging uses the Facebook Graph API, NOT graph.instagram.com
+const GRAPH_API_URL = 'https://graph.facebook.com/v21.0';
 
 @Injectable()
 export class InstagramProvider extends MessagingProviderBase {
   readonly provider = IntegrationProvider.INSTAGRAM;
+  private readonly logger = new Logger(InstagramProvider.name);
 
   async sendMessage(
     config: Record<string, any>,
@@ -24,7 +26,6 @@ export class InstagramProvider extends MessagingProviderBase {
   ): Promise<SendMessageResult> {
     const accessToken = config.accessToken;
     const igAccountId = config.igAccountId;
-    const url = `${INSTAGRAM_API_URL}/${igAccountId}/messages`;
 
     const body: any = {
       recipient: { id: options.to },
@@ -36,11 +37,12 @@ export class InstagramProvider extends MessagingProviderBase {
       body.message = {
         attachment: {
           type: this.toIgAttachmentType(options.type),
-          payload: { url: options.content },
+          payload: { url: options.content, is_reusable: true },
         },
       };
     }
 
+    const url = `${GRAPH_API_URL}/${igAccountId}/messages`;
     const response = await fetch(`${url}?access_token=${accessToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,6 +52,7 @@ export class InstagramProvider extends MessagingProviderBase {
     const data = await response.json();
 
     if (!response.ok) {
+      this.logger.error(`Instagram sendMessage failed: ${JSON.stringify(data)}`);
       throw new Error(`Instagram API error: ${JSON.stringify(data)}`);
     }
 
@@ -69,6 +72,7 @@ export class InstagramProvider extends MessagingProviderBase {
 
     const entries = payload.entry || [];
     for (const entry of entries) {
+      // For Instagram, entry.id is the Instagram-scoped ID (igAccountId)
       integrationExternalId = entry.id || '';
 
       const messaging = entry.messaging || [];
@@ -81,19 +85,18 @@ export class InstagramProvider extends MessagingProviderBase {
             externalContactId: event.sender.id,
             contactName: undefined,
             messageExternalId: event.message.mid,
-            content: event.message.text || firstAttachment?.payload?.url || `[${firstAttachment?.type || 'attachment'}]`,
+            content: event.message.text || firstAttachment?.payload?.url || `[${firstAttachment?.type || 'media'}]`,
             type: this.mapAttachmentType(firstAttachment?.type),
             timestamp: new Date(event.timestamp),
+            metadata: this.extractAttachmentMetadata(firstAttachment),
             rawPayload: event,
           });
-        }
 
-        // Story mentions / replies
-        if (event.message?.reply_to?.story) {
-          // Treat story replies as regular messages with metadata
-          const msg = messages[messages.length - 1];
-          if (msg) {
-            msg.rawPayload.storyReply = true;
+          if (event.message?.reply_to?.story) {
+            const msg = messages[messages.length - 1];
+            if (msg) {
+              msg.metadata = { ...msg.metadata, storyReply: true, storyUrl: event.message.reply_to.story.url };
+            }
           }
         }
 
@@ -145,6 +148,15 @@ export class InstagramProvider extends MessagingProviderBase {
 
   getExternalIdFromConfig(config: Record<string, any>): string {
     return config.igAccountId || '';
+  }
+
+  private extractAttachmentMetadata(attachment: any): Record<string, any> {
+    if (!attachment) return {};
+    return {
+      mediaUrl: attachment.payload?.url,
+      mediaType: attachment.type,
+      mimeType: attachment.payload?.mime_type,
+    };
   }
 
   private toIgAttachmentType(type: MessageType): string {
