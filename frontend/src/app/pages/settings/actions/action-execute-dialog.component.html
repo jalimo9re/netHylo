@@ -1,20 +1,16 @@
-<div class="p-6 sm:p-8 max-h-[85vh] overflow-y-auto">
-  <div class="flex items-center justify-between mb-8">
-    <div>
-      <h2 class="text-xl font-bold text-white font-display tracking-tight">Ejecutar Accion</h2>
-      <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">{{ data.integration.name }}</p>
-    </div>
-    <button (click)="close()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
-      <mat-icon class="text-lg text-slate-400">close</mat-icon>
-    </button>
-  </div>
+<h2 mat-dialog-title class="!mb-0">
+  <span>Ejecutar Acción</span>
+  <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">{{ data.integration.name }}</p>
+</h2>
 
+<mat-dialog-content class="flex flex-col gap-5 py-4">
   <!-- Category selector -->
-  <div class="mb-6">
-    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Categoria</label>
+  <div class="space-y-1.5">
+    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Categoría</label>
     <div class="flex flex-wrap gap-2">
       @for (cat of categories; track cat.key) {
         <button
+          type="button"
           (click)="selectedCategory = cat.key; onCategoryChange()"
           class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border"
           [class]="selectedCategory === cat.key ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'"
@@ -28,11 +24,12 @@
 
   <!-- Action selector -->
   @if (selectedCategory) {
-    <div class="mb-6">
-      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Accion</label>
+    <div class="space-y-1.5">
+      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Acción</label>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         @for (action of actionsForCategory; track action.action) {
           <button
+            type="button"
             (click)="selectedAction = action.action; onActionChange()"
             class="text-left p-3 rounded-xl text-xs transition-all border"
             [class]="selectedAction === action.action ? 'bg-primary/10 border-primary/20' : 'bg-white/5 border-white/10 hover:bg-white/10'"
@@ -46,93 +43,78 @@
   }
 
   <!-- Params form -->
-  @if (currentCapability) {
-    @if (currentCapability.params.length > 0) {
-      <div class="mb-6 space-y-4">
-        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Parametros</label>
-        @for (param of currentCapability.params; track param.key) {
-          <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">
-              {{ param.label }}
-              @if (param.required) {
-                <span class="text-rose-400">*</span>
-              }
-            </label>
-            @if (param.type === 'select' && param.options) {
-              <select
-                [(ngModel)]="params[param.key]"
-                class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors"
-              >
-                <option value="">Selecciona...</option>
+  @if (currentCapability && currentCapability.params.length > 0) {
+    <div class="border-t border-white/10 pt-4 mt-1 space-y-4">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Parámetros</p>
+      @for (param of currentCapability.params; track param.key) {
+        <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+            {{ param.label }}
+            @if (param.required) {
+              <span class="text-rose-400 ml-0.5">*</span>
+            }
+          </label>
+          @if (param.type === 'select' && param.options) {
+            <div class="bg-white/5 border border-border rounded-xl px-3 py-1.5 focus-within:border-primary/50 transition-all">
+              <mat-select [(ngModel)]="params[param.key]" panelClass="nethylo-select-panel" class="w-full">
                 @for (opt of param.options; track opt.value) {
-                  <option [value]="opt.value">{{ opt.label }}</option>
+                  <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                 }
-              </select>
-            } @else if (param.type === 'text') {
+              </mat-select>
+            </div>
+          } @else if (param.type === 'text') {
+            <div class="bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
               <textarea
                 [(ngModel)]="params[param.key]"
                 rows="3"
                 [placeholder]="param.help || ''"
-                class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-slate-600 resize-none"
+                class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500 resize-none"
               ></textarea>
-            } @else if (param.type === 'date') {
+            </div>
+          } @else if (param.type === 'date') {
+            <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
               <input
                 type="date"
                 [(ngModel)]="params[param.key]"
-                class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors"
+                class="bg-transparent border-none outline-none text-sm w-full text-slate-200"
               />
-            } @else if (param.type === 'boolean') {
-              <select
-                [(ngModel)]="params[param.key]"
-                class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors"
-              >
-                <option value="">Selecciona...</option>
-                <option value="true">Si</option>
-                <option value="false">No</option>
-              </select>
-            } @else {
+            </div>
+          } @else if (param.type === 'boolean') {
+            <div class="bg-white/5 border border-border rounded-xl px-3 py-1.5 focus-within:border-primary/50 transition-all">
+              <mat-select [(ngModel)]="params[param.key]" panelClass="nethylo-select-panel" class="w-full">
+                <mat-option value="true">Sí</mat-option>
+                <mat-option value="false">No</mat-option>
+              </mat-select>
+            </div>
+          } @else {
+            <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
               <input
                 [type]="param.type === 'number' ? 'number' : 'text'"
                 [(ngModel)]="params[param.key]"
                 [placeholder]="param.help || ''"
-                class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-slate-600"
+                class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
               />
-            }
-            @if (param.help) {
-              <p class="text-[10px] text-slate-600 mt-1">{{ param.help }}</p>
-            }
-          </div>
-        }
-      </div>
-    }
-
-    <!-- Execute button -->
-    <div class="mb-6">
-      <button
-        (click)="execute()"
-        [disabled]="executing || !isValid()"
-        class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        @if (executing) {
-          <div class="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-          Ejecutando...
-        } @else {
-          <mat-icon class="text-lg">play_arrow</mat-icon>
-          Ejecutar {{ currentCapability.label }}
-        }
-      </button>
+              @if (param.help) {
+                <button type="button" class="text-slate-400 hover:text-primary transition-colors" [matTooltip]="param.help">
+                  <mat-icon class="text-base">help_outline</mat-icon>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 
   <!-- Result -->
   @if (result) {
-    <div class="rounded-xl border overflow-hidden {{ result.success ? 'border-green-500/20' : 'border-rose-500/20' }}">
-      <div class="px-4 py-2.5 flex items-center gap-2 {{ result.success ? 'bg-green-500/10' : 'bg-rose-500/10' }}">
-        <mat-icon class="text-sm {{ result.success ? 'text-green-400' : 'text-rose-400' }}">
+    <div class="rounded-xl border overflow-hidden" [class]="result.success ? 'border-green-500/20' : 'border-rose-500/20'">
+      <div class="px-4 py-2.5 flex items-center gap-2" [class]="result.success ? 'bg-green-500/10' : 'bg-rose-500/10'">
+        <mat-icon class="text-sm" [class]="result.success ? 'text-green-400' : 'text-rose-400'">
           {{ result.success ? 'check_circle' : 'error' }}
         </mat-icon>
-        <span class="text-xs font-bold {{ result.success ? 'text-green-400' : 'text-rose-400' }}">
-          {{ result.success ? 'Exito' : 'Error' }}
+        <span class="text-xs font-bold" [class]="result.success ? 'text-green-400' : 'text-rose-400'">
+          {{ result.success ? 'Éxito' : 'Error' }}
         </span>
       </div>
       @if (result.error) {
@@ -147,4 +129,23 @@
       }
     </div>
   }
-</div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="!pt-4">
+  <button mat-button class="!text-slate-300 hover:!bg-white/10" (click)="close()">Cerrar</button>
+  @if (currentCapability) {
+    <button
+      class="bg-primary hover:bg-primary-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      [disabled]="executing || !isValid()"
+      (click)="execute()"
+    >
+      @if (executing) {
+        <div class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+        Ejecutando...
+      } @else {
+        <mat-icon class="text-lg">play_arrow</mat-icon>
+        Ejecutar
+      }
+    </button>
+  }
+</mat-dialog-actions>

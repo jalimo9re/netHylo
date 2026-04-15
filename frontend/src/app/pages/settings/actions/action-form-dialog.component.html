@@ -1,58 +1,64 @@
-<div class="p-6 sm:p-8">
-  <div class="flex items-center justify-between mb-8">
-    <h2 class="text-xl font-bold text-white font-display tracking-tight">
-      {{ isEdit ? 'Editar Accion' : 'Nueva Accion' }}
-    </h2>
-    <button (click)="cancel()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
-      <mat-icon class="text-lg text-slate-400">close</mat-icon>
-    </button>
-  </div>
+<h2 mat-dialog-title class="!mb-1">{{ isEdit ? 'Editar' : 'Nueva' }} acción</h2>
 
-  <!-- Provider selector -->
+<mat-dialog-content class="flex flex-col gap-5 py-4">
+  @if (error) {
+    <div class="bg-rose-500/15 border border-rose-500/30 text-rose-300 px-4 py-3 rounded-xl text-sm">
+      {{ error }}
+    </div>
+  }
+
   @if (!isEdit) {
-    <div class="mb-6">
-      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Proveedor</label>
-      <select
-        [(ngModel)]="selectedProvider"
-        (ngModelChange)="onProviderChange()"
-        class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors"
-      >
-        <option value="" disabled>Selecciona un proveedor</option>
-        @for (p of providers; track p.key) {
-          <option [value]="p.key">{{ p.label }}</option>
-        }
-      </select>
+    <div class="space-y-1.5">
+      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Proveedor</label>
+      <div class="bg-white/5 border border-border rounded-xl px-3 py-1.5 focus-within:border-primary/50 transition-all">
+        <mat-select [(ngModel)]="selectedProvider" (selectionChange)="onProviderChange()" panelClass="nethylo-select-panel" class="w-full">
+          @for (p of providers; track p.key) {
+            <mat-option [value]="p.key">{{ p.label }}</mat-option>
+          }
+        </mat-select>
+      </div>
     </div>
   }
 
   @if (selectedProvider) {
     <!-- Name -->
-    <div class="mb-6">
-      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nombre</label>
-      <input
-        type="text"
-        [(ngModel)]="name"
-        placeholder="Ej: Floww Clinica Principal"
-        class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-slate-600"
-      />
+    <div class="space-y-1.5">
+      <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Nombre de la acción</label>
+      <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+        <input
+          [(ngModel)]="name"
+          placeholder="Ej: Floww Clinica Principal"
+          class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+        />
+      </div>
+      <p class="text-xs text-slate-500 ml-1">Nombre interno para identificar esta conexión</p>
     </div>
 
-    <!-- Setup guide -->
+    <!-- Setup Guide -->
     @if (getSetupGuide().length > 0) {
-      <div class="mb-6">
+      <div class="border border-amber-500/20 rounded-xl overflow-hidden">
         <button
+          type="button"
           (click)="showGuide = !showGuide"
-          class="flex items-center gap-2 text-xs font-bold text-primary hover:text-primary-400 transition-colors"
+          class="w-full flex items-center justify-between px-4 py-3 bg-amber-500/10 hover:bg-amber-500/15 transition-colors"
         >
-          <mat-icon class="text-sm">{{ showGuide ? 'expand_less' : 'help_outline' }}</mat-icon>
-          {{ showGuide ? 'Ocultar guia' : 'Ver guia de configuracion' }}
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-amber-400 text-lg">school</mat-icon>
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">Cómo obtener las credenciales</span>
+          </div>
+          <mat-icon class="text-amber-400 text-sm transition-transform" [class.rotate-180]="showGuide">expand_more</mat-icon>
         </button>
         @if (showGuide) {
-          <div class="mt-3 bg-primary/5 border border-primary/10 rounded-xl p-5 space-y-3">
-            @for (step of getSetupGuide(); track step.title) {
-              <div>
-                <h5 class="text-sm font-bold text-white">{{ step.title }}</h5>
-                <p class="text-xs text-slate-400 mt-0.5">{{ step.description }}</p>
+          <div class="px-4 py-3 space-y-3 bg-amber-500/5">
+            @for (step of getSetupGuide(); track step.title; let i = $index) {
+              <div class="flex gap-3">
+                <div class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0 text-[11px] font-bold mt-0.5">
+                  {{ i + 1 }}
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-slate-200">{{ step.title }}</p>
+                  <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">{{ step.description }}</p>
+                </div>
               </div>
             }
           </div>
@@ -61,63 +67,59 @@
     }
 
     <!-- Config fields -->
-    <div class="space-y-4">
-      @for (field of fields; track field.key) {
-        <div>
-          <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
-            {{ field.label }}
-            @if (field.required) {
-              <span class="text-rose-400">*</span>
-            }
-          </label>
-          @if (field.type === 'select' && field.options) {
-            <select
-              [(ngModel)]="config[field.key]"
-              class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors"
-            >
-              <option value="" disabled>Selecciona...</option>
-              @for (opt of field.options; track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-          } @else {
-            <input
-              [type]="field.type === 'password' ? 'password' : 'text'"
-              [(ngModel)]="config[field.key]"
-              [placeholder]="field.help || ''"
-              class="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-slate-600"
-            />
-          }
-          @if (field.help && field.type !== 'select') {
-            <p class="text-[10px] text-slate-600 mt-1">{{ field.help }}</p>
-          }
-        </div>
-      }
-    </div>
+    @if (fields.length > 0) {
+      <div class="border-t border-white/10 pt-4 mt-1 space-y-4">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+          Configuración de {{ data.schemas[selectedProvider].label }}
+        </p>
 
-    <!-- Error -->
-    @if (error) {
-      <div class="mt-4 bg-rose-500/10 border border-rose-500/20 rounded-xl px-4 py-3 text-xs font-bold text-rose-400">
-        {{ error }}
+        @for (field of fields; track field.key) {
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+              {{ field.label }}
+              @if (field.required) {
+                <span class="text-rose-400 ml-0.5">*</span>
+              }
+            </label>
+            @if (field.type === 'select' && field.options) {
+              <div class="bg-white/5 border border-border rounded-xl px-3 py-1.5 focus-within:border-primary/50 transition-all">
+                <mat-select [(ngModel)]="config[field.key]" panelClass="nethylo-select-panel" class="w-full">
+                  @for (opt of field.options; track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
+              </div>
+            } @else {
+              <div class="flex items-center gap-3 bg-white/5 border border-border rounded-xl px-4 py-2.5 focus-within:border-primary/50 transition-all">
+                <input
+                  [type]="field.type === 'password' ? 'password' : 'text'"
+                  [(ngModel)]="config[field.key]"
+                  [required]="field.required"
+                  class="bg-transparent border-none outline-none text-sm w-full text-slate-200 placeholder:text-slate-500"
+                />
+                @if (field.help) {
+                  <button type="button" class="text-slate-400 hover:text-primary transition-colors" [matTooltip]="field.help">
+                    <mat-icon class="text-base">help_outline</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
       </div>
     }
-
-    <!-- Actions -->
-    <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-white/5">
-      <button (click)="cancel()" class="px-5 py-2.5 text-sm font-bold text-slate-400 hover:text-white transition-colors">
-        Cancelar
-      </button>
-      <button
-        (click)="save()"
-        [disabled]="loading || !isValid()"
-        class="px-6 py-2.5 bg-primary hover:bg-primary-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        @if (loading) {
-          <div class="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin mx-4"></div>
-        } @else {
-          {{ isEdit ? 'Guardar' : 'Crear' }}
-        }
-      </button>
-    </div>
   }
-</div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="!pt-4">
+  <button mat-button class="!text-slate-300 hover:!bg-white/10" (click)="cancel()">Cancelar</button>
+  @if (selectedProvider) {
+    <button
+      class="bg-primary hover:bg-primary-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      [disabled]="!isValid() || loading"
+      (click)="save()"
+    >
+      {{ loading ? 'Guardando...' : (isEdit ? 'Guardar cambios' : 'Crear acción') }}
+    </button>
+  }
+</mat-dialog-actions>

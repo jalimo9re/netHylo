@@ -9,6 +9,7 @@ import {
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   ActionsService,
   ActionIntegration,
@@ -31,6 +32,7 @@ interface DialogData {
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule,
   ],
   templateUrl: './action-form-dialog.component.html',
 })
