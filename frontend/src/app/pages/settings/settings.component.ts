@@ -23,6 +23,7 @@ export class SettingsComponent implements OnInit {
     }
     
     if (role === 'superadmin') {
+      items.push({ label: 'Pruebas', icon: 'science', route: 'testing' });
       items.push({ label: 'Sistema', icon: 'settings_suggest', route: 'system' });
     }
     

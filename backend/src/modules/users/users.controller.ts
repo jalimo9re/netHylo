@@ -25,15 +25,16 @@ export class UsersController {
     if (req.user?.role === UserRole.SUPERADMIN) {
       return this.usersService.findAllGlobal();
     }
-    return this.usersService.findAllByTenant(req.tenantId);
+    return this.usersService.findAllByTenant(req.tenantId ?? req.user?.tenantId);
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   findOne(@Param('id') id: string, @Request() req: any) {
     if (req.user?.role === UserRole.SUPERADMIN) {
       return this.usersService.findOneGlobal(id);
     }
-    return this.usersService.findOne(id, req.tenantId);
+    return this.usersService.findOne(id, req.tenantId ?? req.user?.tenantId);
   }
 
   @Post()
@@ -41,7 +42,7 @@ export class UsersController {
   @UseGuards(PlanGuard)
   @CheckPlanLimit('users')
   create(@Body() dto: any, @Request() req: any) {
-    return this.usersService.create(req.tenantId, dto);
+    return this.usersService.create(req.tenantId ?? req.user?.tenantId, dto);
   }
 
   @Patch(':id')
@@ -50,7 +51,7 @@ export class UsersController {
     if (req.user?.role === UserRole.SUPERADMIN) {
       return this.usersService.updateGlobal(id, data);
     }
-    return this.usersService.update(id, req.tenantId, data);
+    return this.usersService.update(id, req.tenantId ?? req.user?.tenantId, data);
   }
 
   @Patch(':id/reset-password')

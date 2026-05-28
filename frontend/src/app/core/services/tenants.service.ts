@@ -7,6 +7,16 @@ export interface Tenant {
   name: string;
   slug: string;
   isActive: boolean;
+  parentTenantId?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  customDomain?: string | null;
+  branding?: {
+    logoUrl?: string | null;
+    primaryColor?: string | null;
+    customDomain?: string | null;
+  } | null;
+  isAgency?: boolean;
   plan: { id: string; name: string; maxUsers: number; maxIntegrations: number; price: number };
   createdAt: string;
   updatedAt: string;
@@ -20,6 +30,7 @@ export interface CreateTenantDto {
   adminPassword: string;
   adminFirstName: string;
   adminLastName: string;
+  isAgency?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

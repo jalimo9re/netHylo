@@ -18,6 +18,7 @@ interface CreateTenantDto {
   adminPassword: string;
   adminFirstName: string;
   adminLastName: string;
+  isAgency?: boolean;
 }
 
 @Injectable()
@@ -52,6 +53,8 @@ export class TenantsService {
       name: dto.companyName,
       slug: dto.companySlug,
       planId: dto.planId,
+      isAgency: dto.isAgency ?? false,
+      branding: null,
     });
     await this.tenantRepo.save(tenant);
 
@@ -83,8 +86,20 @@ export class TenantsService {
   }
 
   async update(id: string, data: Partial<Tenant>) {
-    await this.findOne(id);
-    await this.tenantRepo.update(id, data);
+    const tenant = await this.findOne(id);
+    const merged: Partial<Tenant> = { ...data };
+    if (
+      Object.prototype.hasOwnProperty.call(data, 'logoUrl') ||
+      Object.prototype.hasOwnProperty.call(data, 'primaryColor') ||
+      Object.prototype.hasOwnProperty.call(data, 'customDomain')
+    ) {
+      merged.branding = {
+        logoUrl: (data.logoUrl ?? tenant.logoUrl) ?? null,
+        primaryColor: (data.primaryColor ?? tenant.primaryColor) ?? null,
+        customDomain: (data.customDomain ?? tenant.customDomain) ?? null,
+      };
+    }
+    await this.tenantRepo.update(id, merged);
     return this.findOne(id);
   }
 

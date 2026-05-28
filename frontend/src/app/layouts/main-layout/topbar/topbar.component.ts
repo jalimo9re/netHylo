@@ -1,6 +1,7 @@
 import { Component, output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
+import { TenantBrandingService } from '../../../core/services/tenant-branding.service';
 
 @Component({
   selector: 'app-topbar',
@@ -11,7 +12,10 @@ import { AuthService } from '../../../core/services/auth.service';
 export class TopbarComponent {
   menuToggle = output<void>();
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    public tenantBranding: TenantBrandingService,
+  ) {}
 
   get userEmail(): string {
     return this.authService.currentUser()?.email || '';

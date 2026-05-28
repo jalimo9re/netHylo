@@ -5,9 +5,11 @@ import {
   CallHandler,
   ForbiddenException,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@/database/entities/user.entity';
+import { TenantAccessService } from '@/common/services/tenant-access.service';
 
 export const SKIP_TENANT_CHECK = 'skipTenantCheck';
 export const SkipTenantCheck = () =>
@@ -15,7 +17,10 @@ export const SkipTenantCheck = () =>
 
 @Injectable()
 export class TenantInterceptor implements NestInterceptor {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private tenantAccessService: TenantAccessService,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const skipCheck = this.reflector.getAllAndOverride<boolean>(SKIP_TENANT_CHECK, [
@@ -34,21 +39,40 @@ export class TenantInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // Superadmins can operate across tenants via X-Tenant-Id header
+    const headerTenantId = request.headers['x-tenant-id'] as string | undefined;
+
     if (user.role === UserRole.SUPERADMIN) {
-      const headerTenantId = request.headers['x-tenant-id'];
       if (headerTenantId) {
         request.tenantId = headerTenantId;
       }
       return next.handle();
     }
 
-    // Regular users must have a tenantId
     if (!user.tenantId) {
       throw new ForbiddenException('No tenant context available');
     }
 
-    request.tenantId = user.tenantId;
-    return next.handle();
+    if (!headerTenantId || headerTenantId === user.tenantId) {
+      request.tenantId = user.tenantId;
+      return next.handle();
+    }
+
+    if (user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Cannot switch tenant context');
+    }
+
+    return from(
+      this.tenantAccessService.canImpersonateTenant(user.tenantId, headerTenantId, {
+        requireAgency: true,
+      }),
+    ).pipe(
+      switchMap((allowed) => {
+        if (!allowed) {
+          throw new ForbiddenException('Cannot access this subaccount');
+        }
+        request.tenantId = headerTenantId;
+        return next.handle();
+      }),
+    );
   }
 }

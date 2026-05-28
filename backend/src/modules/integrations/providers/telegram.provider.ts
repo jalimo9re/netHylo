@@ -81,10 +81,11 @@ export class TelegramProvider extends MessagingProviderBase {
 
     const from = message.from;
     const chatId = message.chat.id.toString();
-    const contactName = [from.first_name, from.last_name].filter(Boolean).join(' ');
+    const senderId = from?.id?.toString() || chatId;
+    const contactName = [from?.first_name, from?.last_name].filter(Boolean).join(' ');
 
     messages.push({
-      externalContactId: chatId,
+      externalContactId: senderId,
       contactName,
       contactPhone: undefined,
       messageExternalId: message.message_id.toString(),

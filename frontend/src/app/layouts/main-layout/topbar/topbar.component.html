@@ -1,4 +1,4 @@
-<header class="h-16 glass border-t-0 border-x-0 border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm fixed top-0 left-0 lg:left-64 right-0 z-20">
+<header class="app-topbar glass border-t-0 border-x-0 border-b border-border flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm fixed top-0 left-0 lg:left-64 right-0 z-20">
   <!-- Left: hamburger + search -->
   <div class="flex items-center gap-3 flex-1 min-w-0">
     <!-- Hamburger (mobile only) -->
@@ -28,9 +28,20 @@
     </button>
 
     <div class="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-6 border-l border-border h-8 cursor-pointer group">
-      <div class="w-9 h-9 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform flex-shrink-0">
-        {{ userEmail.charAt(0).toUpperCase() }}
-      </div>
+      @if (tenantBranding.branding()?.logoUrl) {
+        <img
+          [src]="tenantBranding.branding()!.logoUrl!"
+          [alt]="tenantBranding.branding()!.name || 'Logo'"
+          class="h-9 w-auto max-w-[120px] object-contain rounded-lg flex-shrink-0"
+        />
+      } @else {
+        <div
+          class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg group-hover:scale-105 transition-transform flex-shrink-0"
+          [style.background]="tenantBranding.branding()?.primaryColor || 'linear-gradient(to bottom right, var(--color-primary), var(--color-secondary))'"
+        >
+          {{ (tenantBranding.branding()?.name || userEmail).charAt(0).toUpperCase() }}
+        </div>
+      }
       <div class="hidden md:flex flex-col">
         <span class="text-sm font-semibold text-slate-100 leading-tight">{{ userEmail.split('@')[0] }}</span>
         <span class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{{ userRole }}</span>

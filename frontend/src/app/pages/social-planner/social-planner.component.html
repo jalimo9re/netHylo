@@ -1,0 +1,136 @@
+<div class="p-3 sm:p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-semibold">Social Planner MVP</h2>
+    <button mat-stroked-button (click)="refreshAll()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Actualizar
+    </button>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 text-sm">
+    <div class="glass p-3 rounded-xl">Programados: <strong>{{ metrics.scheduled }}</strong></div>
+    <div class="glass p-3 rounded-xl">Publicados: <strong>{{ metrics.published }}</strong></div>
+    <div class="glass p-3 rounded-xl">Fallidos: <strong>{{ metrics.failed }}</strong></div>
+    <div class="glass p-3 rounded-xl">Total: <strong>{{ metrics.total }}</strong></div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+    <mat-card class="p-4">
+      <h3 class="font-semibold mb-3">Cuentas conectadas</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+        <select class="border rounded px-3 py-2 bg-transparent" [(ngModel)]="accountForm.platform">
+          @for (channel of channels; track channel) {
+            <option [value]="channel">{{ channel }}</option>
+          }
+        </select>
+        <input class="border rounded px-3 py-2 bg-transparent" [(ngModel)]="accountForm.handle" placeholder="@handle" />
+        <input class="border rounded px-3 py-2 bg-transparent" [(ngModel)]="accountForm.displayName" placeholder="Nombre visible" />
+        <input class="border rounded px-3 py-2 bg-transparent" [(ngModel)]="accountForm.status" placeholder="connected" />
+      </div>
+      <button mat-flat-button color="primary" (click)="saveAccount()">
+        {{ editingAccountId ? 'Guardar cambios' : 'Agregar cuenta' }}
+      </button>
+
+      <div class="mt-4 space-y-2">
+        @for (account of accounts; track account.id) {
+          <div class="border border-white/10 rounded p-3">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-medium">{{ account.platform }} · {{ account.handle }}</div>
+                <div class="text-xs opacity-70">{{ account.displayName || 'Sin nombre' }} · {{ account.status }}</div>
+              </div>
+              <div class="flex gap-2">
+                <button mat-stroked-button (click)="editAccount(account)">Editar</button>
+                <button mat-stroked-button color="warn" (click)="removeAccount(account)">Borrar</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </mat-card>
+
+    <mat-card class="p-4">
+      <h3 class="font-semibold mb-3">Composer de post</h3>
+      <textarea
+        class="border rounded px-3 py-2 bg-transparent w-full mb-3"
+        rows="4"
+        [(ngModel)]="postForm.content"
+        placeholder="Escribe el contenido del post"
+      ></textarea>
+      <div class="flex flex-wrap gap-2 mb-3">
+        @for (channel of channels; track channel) {
+          <button
+            mat-stroked-button
+            [ngClass]="{ 'bg-white/10': postForm.channels.includes(channel) }"
+            (click)="toggleChannel(channel)"
+          >
+            {{ channel }}
+          </button>
+        }
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+        <input class="border rounded px-3 py-2 bg-transparent" type="datetime-local" [(ngModel)]="postForm.scheduledAt" />
+        <select class="border rounded px-3 py-2 bg-transparent" [(ngModel)]="postForm.status">
+          <option value="draft">draft</option>
+          <option value="scheduled">scheduled</option>
+        </select>
+      </div>
+      <button mat-flat-button color="primary" (click)="savePost()">Crear post</button>
+    </mat-card>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <mat-card class="p-4">
+      <h3 class="font-semibold mb-3">Listado de publicaciones</h3>
+      @for (post of posts; track post.id) {
+        <button class="w-full text-left border-b border-white/10 py-3 px-2 hover:bg-white/5" (click)="openPost(post)">
+          <div class="flex justify-between gap-2">
+            <div class="line-clamp-2">{{ post.content }}</div>
+            <span class="text-xs uppercase" [class]="statusClass(post.status)">{{ post.status }}</span>
+          </div>
+          <div class="text-xs opacity-70 mt-1">
+            {{ post.channels.join(', ') }} ·
+            {{ (post.scheduledAt || post.createdAt) | date: 'short' }}
+          </div>
+        </button>
+      }
+    </mat-card>
+
+    <mat-card class="p-4">
+      <h3 class="font-semibold mb-3">Calendario simple por día</h3>
+      @for (group of calendarByDay; track group.day) {
+        <div class="mb-3">
+          <div class="text-sm font-semibold mb-1">{{ group.day }}</div>
+          <div class="space-y-1">
+            @for (post of group.items; track post.id) {
+              <div class="text-sm px-2 py-1 rounded bg-white/5">
+                {{ post.channels.join(', ') }} · {{ post.content | slice:0:80 }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </mat-card>
+  </div>
+
+  @if (selectedPost) {
+    <mat-card class="p-4 mt-4">
+      <h3 class="font-semibold mb-2">Estado y logs</h3>
+      <div class="text-sm mb-3">
+        <span class="uppercase" [class]="statusClass(selectedPost.status)">{{ selectedPost.status }}</span>
+        <span class="opacity-70"> · {{ selectedPost.channels.join(', ') }}</span>
+      </div>
+      <div class="space-y-2">
+        @for (log of selectedPost.logs; track log.id) {
+          <div class="rounded border border-white/10 p-2 text-sm">
+            <div class="flex justify-between items-center">
+              <span class="uppercase text-xs">{{ log.level }}</span>
+              <span class="text-xs opacity-70">{{ log.createdAt | date: 'short' }}</span>
+            </div>
+            <div>{{ log.message }}</div>
+          </div>
+        }
+      </div>
+    </mat-card>
+  }
+</div>

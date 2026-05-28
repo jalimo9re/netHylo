@@ -1,7 +1,12 @@
-import { Controller, Get, Patch, Param, Body, Request } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Request, UseGuards } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { UserRole } from '@/database/entities/user.entity';
 
 @Controller('contacts')
+@UseGuards(RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
 export class ContactsController {
   constructor(private contactsService: ContactsService) {}
 

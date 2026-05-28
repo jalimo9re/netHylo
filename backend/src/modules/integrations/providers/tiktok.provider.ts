@@ -62,14 +62,15 @@ export class TikTokProvider extends MessagingProviderBase {
     let integrationExternalId = '';
 
     const event = payload;
-    if (event.type === 'receive_message') {
+    if (event?.type === 'receive_message') {
       integrationExternalId = event.business_id || '';
+      const content = event.content;
       messages.push({
         externalContactId: event.user_open_id || event.sender_id || '',
-        contactName: event.user_name,
+        contactName: event.user_name || undefined,
         messageExternalId: event.message_id || '',
-        content: event.content?.text || event.content?.media_url || '[message]',
-        type: event.content?.text ? MessageType.TEXT : MessageType.FILE,
+        content: content?.text || content?.media_url || '[message]',
+        type: content?.text ? MessageType.TEXT : MessageType.FILE,
         timestamp: new Date(event.timestamp || Date.now()),
         rawPayload: event,
       });

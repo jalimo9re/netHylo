@@ -49,6 +49,11 @@
     </div>
   </div>
 
+  <label class="flex items-center gap-3 text-sm text-slate-300 cursor-pointer">
+    <input type="checkbox" [(ngModel)]="isAgency" class="rounded border-border" />
+    Cuenta agencia (SaaS / subcuentas)
+  </label>
+
   @if (!isEdit) {
     <div class="border-t border-white/10 pt-5 mt-1 space-y-4">
       <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrador del tenant</p>

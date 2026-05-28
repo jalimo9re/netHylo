@@ -6,11 +6,13 @@ import { Message } from '@/database/entities/message.entity';
 import { Conversation } from '@/database/entities/conversation.entity';
 import { Integration } from '@/database/entities/integration.entity';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { MobileModule } from '../mobile/mobile.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Message, Conversation, Integration]),
     IntegrationsModule,
+    MobileModule,
   ],
   providers: [MessagesService],
   controllers: [MessagesController],

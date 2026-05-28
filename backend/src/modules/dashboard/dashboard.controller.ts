@@ -14,4 +14,9 @@ export class DashboardController {
   getRecentActivity(@Request() req: any) {
     return this.dashboardService.getRecentActivity(req.tenantId);
   }
+
+  @Get('agents/performance')
+  getAgentPerformance(@Request() req: any) {
+    return this.dashboardService.getAgentPerformance(req.tenantId);
+  }
 }

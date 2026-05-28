@@ -15,6 +15,12 @@ import { Contact } from './contact.entity';
 import { Conversation } from './conversation.entity';
 import { Message } from './message.entity';
 
+export interface TenantBranding {
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  customDomain?: string | null;
+}
+
 @Entity('tenants')
 export class Tenant {
   @PrimaryGeneratedColumn('uuid')
@@ -35,6 +41,34 @@ export class Tenant {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @ManyToOne(() => Tenant, (tenant) => tenant.subAccounts, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'parent_tenant_id' })
+  parentTenant: Tenant | null;
+
+  @Column({ name: 'parent_tenant_id', nullable: true })
+  parentTenantId: string | null;
+
+  @OneToMany(() => Tenant, (tenant) => tenant.parentTenant)
+  subAccounts: Tenant[];
+
+  @Column({ name: 'logo_url', length: 500, nullable: true })
+  logoUrl: string | null;
+
+  @Column({ name: 'primary_color', length: 20, nullable: true })
+  primaryColor: string | null;
+
+  @Column({ name: 'custom_domain', length: 255, nullable: true })
+  customDomain: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  branding: TenantBranding | null;
+
+  @Column({ name: 'is_agency', default: false })
+  isAgency: boolean;
 
   @OneToMany(() => User, (user) => user.tenant)
   users: User[];

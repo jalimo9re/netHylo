@@ -19,6 +19,24 @@ export interface ActivityItem {
   senderUser: string | null;
 }
 
+export interface AgentPerformanceRow {
+  userId: string;
+  agentName: string;
+  responsesInbox: number;
+  dealsWon: number;
+  overdueTasks: number;
+}
+
+export interface AgentPerformance {
+  timeframeDays: number;
+  agents: AgentPerformanceRow[];
+  totals: {
+    responsesInbox: number;
+    dealsWon: number;
+    overdueTasks: number;
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private url = `${environment.apiUrl}/dashboard`;
@@ -31,5 +49,9 @@ export class DashboardService {
 
   getRecentActivity() {
     return this.http.get<ActivityItem[]>(`${this.url}/activity`);
+  }
+
+  getAgentPerformance() {
+    return this.http.get<AgentPerformance>(`${this.url}/agents/performance`);
   }
 }

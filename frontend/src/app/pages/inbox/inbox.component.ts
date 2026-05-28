@@ -34,6 +34,7 @@ export class InboxComponent implements OnInit, OnDestroy {
   sendingMessage = false;
   mobileView = signal<'list' | 'chat'>('list');
   statusFilter = signal<'open' | 'closed'>('open');
+  searchQuery = signal('');
   selectedImageDataUrl = '';
   selectedImageName = '';
   selectedImageMimeType = '';
@@ -47,7 +48,15 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   filteredConversations = computed(() => {
     const filter = this.statusFilter();
-    return this.allConversations.filter((c) => c.status === filter);
+    const query = this.searchQuery().trim().toLowerCase();
+    return this.allConversations.filter((c) => {
+      if (c.status !== filter) return false;
+      if (!query) return true;
+      const name = c.contact?.name?.toLowerCase() || '';
+      const phone = c.contact?.phone?.toLowerCase() || '';
+      const integration = c.integration?.name?.toLowerCase() || '';
+      return name.includes(query) || phone.includes(query) || integration.includes(query);
+    });
   });
 
   constructor(
@@ -86,6 +95,10 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   setFilter(filter: 'open' | 'closed') {
     this.statusFilter.set(filter);
+  }
+
+  setSearchQuery(value: string) {
+    this.searchQuery.set(value);
   }
 
   get openCount(): number {

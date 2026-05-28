@@ -66,31 +66,79 @@
   <!-- Email Configuration -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
     <div>
-      <div class="mb-6">
-        <h3 class="text-xl font-bold text-white font-display tracking-tight mb-1">Configuración de Email</h3>
-        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Servicio de notificaciones del sistema</p>
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <h3 class="text-xl font-bold text-white font-display tracking-tight mb-1">Configuración de Email</h3>
+          <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Servicio de notificaciones del sistema</p>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
+          <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          <span class="text-[10px] font-bold text-primary uppercase tracking-wider">
+            Activo: {{ emailProvider() === 'smtp' ? 'SMTP' : 'Resend' }}
+          </span>
+        </div>
       </div>
 
       <div class="glass p-6 rounded-3xl border-white/5 space-y-6">
-        <div class="flex gap-2 p-1 bg-white/5 rounded-2xl">
+        <!-- Provider selector as radio cards -->
+        <div class="grid grid-cols-2 gap-3">
           <button
+            type="button"
             (click)="emailProvider.set('smtp')"
-            class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
-            [class]="emailProvider() === 'smtp' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-300'"
+            class="relative p-4 rounded-2xl border-2 transition-all text-left"
+            [class]="emailProvider() === 'smtp'
+              ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10'
+              : 'bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/5'"
           >
-            SMTP
+            @if (emailProvider() === 'smtp') {
+              <div class="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                <mat-icon class="text-white !text-sm !w-4 !h-4 !leading-4">check</mat-icon>
+              </div>
+            } @else {
+              <div class="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-white/20"></div>
+            }
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors"
+              [class]="emailProvider() === 'smtp' ? 'bg-primary/20 text-primary' : 'bg-white/5 text-slate-500'">
+              <mat-icon>dns</mat-icon>
+            </div>
+            <p class="text-sm font-bold uppercase tracking-wider"
+              [class]="emailProvider() === 'smtp' ? 'text-white' : 'text-slate-400'">SMTP</p>
+            <p class="text-[10px] mt-0.5"
+              [class]="emailProvider() === 'smtp' ? 'text-slate-300' : 'text-slate-600'">
+              Servidor propio (Gmail, Zoho…)
+            </p>
           </button>
+
           <button
+            type="button"
             (click)="emailProvider.set('resend')"
-            class="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
-            [class]="emailProvider() === 'resend' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-300'"
+            class="relative p-4 rounded-2xl border-2 transition-all text-left"
+            [class]="emailProvider() === 'resend'
+              ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10'
+              : 'bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/5'"
           >
-            Resend
+            @if (emailProvider() === 'resend') {
+              <div class="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                <mat-icon class="text-white !text-sm !w-4 !h-4 !leading-4">check</mat-icon>
+              </div>
+            } @else {
+              <div class="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-white/20"></div>
+            }
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors"
+              [class]="emailProvider() === 'resend' ? 'bg-primary/20 text-primary' : 'bg-white/5 text-slate-500'">
+              <mat-icon>send</mat-icon>
+            </div>
+            <p class="text-sm font-bold uppercase tracking-wider"
+              [class]="emailProvider() === 'resend' ? 'text-white' : 'text-slate-400'">Resend</p>
+            <p class="text-[10px] mt-0.5"
+              [class]="emailProvider() === 'resend' ? 'text-slate-300' : 'text-slate-600'">
+              API gestionada vía Resend.com
+            </p>
           </button>
         </div>
 
         @if (emailProvider() === 'smtp') {
-          <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 border-t border-white/5 pt-5">
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-1.5">
                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Host</label>
@@ -111,7 +159,7 @@
             </div>
           </div>
         } @else {
-          <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div class="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 border-t border-white/5 pt-5">
             <div class="space-y-1.5">
               <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Resend API Key</label>
               <div class="relative group">

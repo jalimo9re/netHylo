@@ -100,13 +100,9 @@ export class InstagramProvider extends MessagingProviderBase {
           }
         }
 
-        if (event.read) {
-          statusUpdates.push({
-            externalMessageId: event.read.watermark?.toString() || '',
-            status: 'read',
-            timestamp: new Date(event.timestamp),
-          });
-        }
+        // Instagram read events use watermark (timestamp cursor), not message IDs.
+        // Cannot match to individual messages — skip to avoid misleading no-match lookups.
+        // TODO: implement bulk read status update by timestamp range if needed.
       }
     }
 

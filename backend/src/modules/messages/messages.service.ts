@@ -7,6 +7,7 @@ import { Integration, IntegrationProvider } from '@/database/entities/integratio
 import { ProviderFactory } from '../integrations/providers/provider.factory';
 import { MessagingGateway } from '../integrations/gateway/messaging.gateway';
 import { SendMessageOptions } from '../integrations/providers/messaging-provider.interface';
+import { MobileNotificationsService } from '../mobile/mobile-notifications.service';
 
 @Injectable()
 export class MessagesService {
@@ -18,6 +19,7 @@ export class MessagesService {
     @InjectRepository(Integration) private integrationRepo: Repository<Integration>,
     private providerFactory: ProviderFactory,
     private messagingGateway: MessagingGateway,
+    private mobileNotifications: MobileNotificationsService,
   ) {}
 
   async findByConversation(conversationId: string, tenantId: string) {
@@ -111,6 +113,14 @@ export class MessagesService {
         metadata: message.metadata,
         createdAt: message.createdAt,
       },
+    });
+
+    await this.mobileNotifications.createAndDispatch({
+      tenantId,
+      type: 'inbox.new_message',
+      title: 'Nuevo mensaje en inbox',
+      body: options.content?.slice(0, 120) || 'Tienes actividad nueva en conversaciones',
+      payload: { conversationId, messageId: message.id },
     });
 
     return message;

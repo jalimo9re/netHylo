@@ -32,6 +32,7 @@ export class TenantFormDialogComponent implements OnInit {
   adminPassword = '';
   adminFirstName = '';
   adminLastName = '';
+  isAgency = false;
 
   constructor(
     private dialogRef: MatDialogRef<TenantFormDialogComponent>,
@@ -44,6 +45,7 @@ export class TenantFormDialogComponent implements OnInit {
       this.companyName = data.tenant.name;
       this.companySlug = data.tenant.slug;
       this.planId = data.tenant.plan?.id || '';
+      this.isAgency = !!data.tenant.isAgency;
     }
   }
 
@@ -79,6 +81,7 @@ export class TenantFormDialogComponent implements OnInit {
         .update(this.data.tenant!.id, {
           name: this.companyName,
           slug: this.companySlug,
+          isAgency: this.isAgency,
         } as any)
         .subscribe({
           next: () => this.dialogRef.close(true),
@@ -97,7 +100,8 @@ export class TenantFormDialogComponent implements OnInit {
           adminPassword: this.adminPassword,
           adminFirstName: this.adminFirstName,
           adminLastName: this.adminLastName,
-        })
+          isAgency: this.isAgency,
+        } as any)
         .subscribe({
           next: () => this.dialogRef.close(true),
           error: (err) => {

@@ -1,0 +1,133 @@
+<div class="space-y-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-bold font-display tracking-tight text-white">Agency / SaaS</h2>
+      <p class="text-slate-500 text-sm mt-1">Subcuentas, white-label y planes</p>
+    </div>
+    @if (tenantContext.getActiveTenantId()) {
+      <button mat-stroked-button color="warn" (click)="clearContext()">
+        <mat-icon>restart_alt</mat-icon>
+        Salir de subcuenta
+      </button>
+    }
+  </div>
+
+  @if (isSuperadmin && agencies.length === 0 && !loading) {
+    <div class="glass rounded-2xl p-8 text-center text-slate-500">
+      Marca un tenant como agencia en Tenants para gestionar subcuentas.
+    </div>
+  }
+
+  @if (isSuperadmin && agencies.length > 0) {
+    <mat-form-field appearance="outline" class="w-full max-w-md">
+      <mat-label>Agencia</mat-label>
+      <mat-select [(ngModel)]="selectedAgencyId" (selectionChange)="onAgencyChange()">
+        @for (agency of agencies; track agency.id) {
+          <mat-option [value]="agency.id">{{ agency.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="glass rounded-2xl p-6 space-y-4">
+      <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+        <mat-icon class="text-primary">palette</mat-icon>
+        White-label
+      </h3>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Logo URL</mat-label>
+        <input matInput [(ngModel)]="branding.logoUrl" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Color primario</mat-label>
+        <input matInput type="color" [(ngModel)]="branding.primaryColor" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Dominio personalizado</mat-label>
+        <input matInput [(ngModel)]="branding.customDomain" placeholder="app.cliente.com" />
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="saveBranding()">Guardar branding</button>
+    </div>
+
+    <div class="glass rounded-2xl p-6 space-y-4">
+      <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+        <mat-icon class="text-primary">add_business</mat-icon>
+        Nueva subcuenta
+      </h3>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Nombre</mat-label>
+          <input matInput [(ngModel)]="newSubaccount.name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Slug</mat-label>
+          <input matInput [(ngModel)]="newSubaccount.slug" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Plan</mat-label>
+          <mat-select [(ngModel)]="newSubaccount.planId">
+            @for (plan of plans; track plan.id) {
+              <mat-option [value]="plan.id">{{ plan.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email admin</mat-label>
+          <input matInput [(ngModel)]="newSubaccount.adminEmail" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="password" [(ngModel)]="newSubaccount.adminPassword" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Nombre admin</mat-label>
+          <input matInput [(ngModel)]="newSubaccount.adminFirstName" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full sm:col-span-2">
+          <mat-label>Apellido admin</mat-label>
+          <input matInput [(ngModel)]="newSubaccount.adminLastName" />
+        </mat-form-field>
+      </div>
+      <button mat-raised-button color="primary" (click)="createSubaccount()">Crear subcuenta</button>
+    </div>
+  </div>
+
+  <div>
+    <h3 class="text-xl font-semibold text-white mb-4">Subcuentas</h3>
+    @if (loading) {
+      <div class="flex justify-center py-12">
+        <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    } @else if (subaccounts.length === 0) {
+      <div class="glass rounded-2xl p-12 text-center text-slate-500">No hay subcuentas aún</div>
+    } @else {
+      <div class="grid gap-3">
+        @for (sub of subaccounts; track sub.id) {
+          <div class="glass rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h4 class="text-white font-semibold">{{ sub.name }}</h4>
+              <p class="text-slate-500 text-sm">{{ sub.slug }} · {{ sub.plan?.name }}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <mat-form-field appearance="outline" class="!mb-0 w-40">
+                <mat-select
+                  [value]="sub.plan?.id"
+                  (selectionChange)="assignPlan(sub, $event.value)"
+                >
+                  @for (plan of plans; track plan.id) {
+                    <mat-option [value]="plan.id">{{ plan.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-stroked-button (click)="switchToSubaccount(sub)">
+                <mat-icon>swap_horiz</mat-icon>
+                Entrar
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

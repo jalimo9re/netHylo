@@ -1,0 +1,113 @@
+<div class="p-3 sm:p-6 space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h2 class="text-xl font-semibold">Voice / Call Center</h2>
+    <button class="px-3 py-2 rounded border border-white/20" (click)="reloadAll()">Actualizar</button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <section class="glass rounded-xl p-4">
+      <h3 class="font-semibold mb-3">Panel de agente</h3>
+      <div class="flex flex-wrap gap-2 mb-3">
+        <button
+          class="px-3 py-2 rounded border border-white/20"
+          [class.bg-emerald-500]="agentStatus === 'available'"
+          (click)="changeStatus('available')"
+        >
+          Disponible
+        </button>
+        <button
+          class="px-3 py-2 rounded border border-white/20"
+          [class.bg-amber-500]="agentStatus === 'busy'"
+          (click)="changeStatus('busy')"
+        >
+          Ocupado
+        </button>
+        <button
+          class="px-3 py-2 rounded border border-white/20"
+          [class.bg-slate-500]="agentStatus === 'offline'"
+          (click)="changeStatus('offline')"
+        >
+          Offline
+        </button>
+      </div>
+      <p class="text-sm opacity-80">Estado actual: <strong>{{ agentStatus }}</strong></p>
+    </section>
+
+    <section class="glass rounded-xl p-4">
+      <h3 class="font-semibold mb-3">Marcador outbound</h3>
+      <div class="flex gap-2">
+        <input
+          class="flex-1 border border-white/20 rounded px-3 py-2 bg-transparent"
+          placeholder="+15551234567"
+          [(ngModel)]="outboundTo"
+        />
+        <button class="px-3 py-2 rounded border border-white/20" (click)="makeOutboundCall()">
+          Llamar
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <section class="glass rounded-xl p-4">
+      <h3 class="font-semibold mb-3">Colas</h3>
+      <div class="flex gap-2 mb-3">
+        <input
+          class="flex-1 border border-white/20 rounded px-3 py-2 bg-transparent"
+          placeholder="Nombre de cola"
+          [(ngModel)]="queueName"
+        />
+        <button class="px-3 py-2 rounded border border-white/20" (click)="addQueue()">Agregar</button>
+      </div>
+      <div *ngIf="queues.length === 0" class="text-sm opacity-70">Sin colas configuradas</div>
+      <div class="space-y-2">
+        <div *ngFor="let queue of queues" class="border border-white/10 rounded p-2">
+          <div class="font-medium">{{ queue.name }}</div>
+          <div class="text-xs opacity-70">{{ queue.strategy }} · timeout {{ queue.ringTimeoutSeconds }}s</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="glass rounded-xl p-4" *ngIf="metrics as m">
+      <h3 class="font-semibold mb-3">Métricas de hoy</h3>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="border border-white/10 rounded p-2">Total: <strong>{{ m.total }}</strong></div>
+        <div class="border border-white/10 rounded p-2">Respondidas: <strong>{{ m.answered }}</strong></div>
+        <div class="border border-white/10 rounded p-2">Perdidas: <strong>{{ m.missed }}</strong></div>
+        <div class="border border-white/10 rounded p-2">Duración prom.: <strong>{{ m.avgDurationSeconds }}s</strong></div>
+        <div class="border border-white/10 rounded p-2">Espera prom.: <strong>{{ m.avgQueueWaitSeconds }}s</strong></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="glass rounded-xl p-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+      <h3 class="font-semibold">Llamadas recientes</h3>
+      <div class="flex gap-2">
+        <select class="border border-white/20 rounded px-2 py-1 bg-transparent" [(ngModel)]="filters.status" (change)="refreshCalls()">
+          <option value="">Todas</option>
+          <option value="answered">Respondidas</option>
+          <option value="missed">Perdidas</option>
+          <option value="hangup">Finalizadas</option>
+        </select>
+        <select class="border border-white/20 rounded px-2 py-1 bg-transparent" [(ngModel)]="filters.direction" (change)="refreshCalls()">
+          <option value="">Ambas</option>
+          <option value="inbound">Inbound</option>
+          <option value="outbound">Outbound</option>
+        </select>
+      </div>
+    </div>
+    <div *ngIf="calls.length === 0" class="text-sm opacity-70">No hay llamadas para mostrar.</div>
+    <div class="space-y-2">
+      <div *ngFor="let call of calls" class="border border-white/10 rounded p-2">
+        <div class="flex justify-between text-sm">
+          <span>{{ call.fromNumber }} → {{ call.toNumber }}</span>
+          <span class="uppercase opacity-70">{{ call.status }}</span>
+        </div>
+        <div class="text-xs opacity-70">
+          {{ call.direction }} · dur {{ call.durationSeconds || 0 }}s · espera {{ call.queueWaitSeconds || 0 }}s
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
